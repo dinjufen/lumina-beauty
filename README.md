@@ -56,7 +56,7 @@ cmake --build build --config Release --target lumina-beauty
 
 `build\obs-plugin\` then contains the plugin in OBS's layout. `lumina-obs-test` (built alongside) runs the
 filter callbacks on I420 / NV12 / YUY2 / UYVY test frames without opening OBS; run it from OBS's
-`bin4bit` directory with `LUMINA_MODEL_DIR` pointing at `models\`. Install it by copying
+`bin\64bit` directory with `LUMINA_MODEL_DIR` pointing at `models\`. Install it by copying
 `obs-plugins\64bit\*` to `C:\ProgramData\obs-studio\plugins\lumina-beauty\bin\64bit\` and
 `data\obs-plugins\lumina-beauty\*` to `C:\ProgramData\obs-studio\plugins\lumina-beauty\data\`.
 In OBS, right-click a video capture source, choose **Filters**, add **Lumina Beauty**.
