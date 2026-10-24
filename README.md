@@ -1,42 +1,39 @@
 # Lumina Beauty
 
-Real-time face beauty for video: skin smoothing and whitening, face reshaping, color filters, style
-makeup, virtual background, animated cartoon avatars and headwear. Ships as a small C SDK and as an
-[OBS Studio](https://obsproject.com) video filter.
+**中文** | [English](README.en.md)
 
-实时视频美颜：磨皮美白、美型、滤镜、风格妆、虚拟背景、会随表情动的卡通头像和头饰。提供 C 语言 SDK，
-以及可直接加在摄像头上的 OBS 滤镜插件。
+实时视频美颜：磨皮美白、美型、滤镜、风格妆、虚拟背景、会随表情动的卡通头像和头饰。提供一个小巧的 C 语言 SDK，
+以及可以直接加在摄像头上的 [OBS Studio](https://obsproject.com) 滤镜插件。
 
-## Features
+## 功能
 
-| Area | Effects |
+| 类别 | 效果 |
 |---|---|
-| Skin | smoothing (edge-aware, keeps eyes/brows/lips sharp), whitening, sharpen, clarity, whiter teeth, dark circles, smile lines |
-| Face shape | bigger eyes, slim face, narrow face, cheekbones, jaw, nose width, forehead, smaller head |
-| Color | 15 filters, 11 style looks (color grade + makeup: lips, blush, brows, eye shadow, eyeliner, lashes, contour, foundation), temperature / tint / saturation / brightness / contrast |
-| Background | blur or replace, with a hair-aware person mask and edge refinement |
-| Fun | 6 animated cartoon avatars (blink, mouth, smile, brows, gaze, head pose) and 8 headwear items |
+| 美肤 | 磨皮（保边，眼睛、眉毛、嘴唇保持清晰）、美白、锐化、清晰度、美牙、去黑眼圈、去法令纹 |
+| 美型 | 大眼、瘦脸、窄脸、颧骨、下巴、鼻翼、额头、小头 |
+| 色彩 | 15 款滤镜，11 款风格妆（调色 + 妆容：口红、腮红、眉毛、眼影、眼线、睫毛、修容、粉底），色温 / 色调 / 饱和度 / 亮度 / 对比度 |
+| 背景 | 背景虚化或替换，人像掩膜能识别头发，并做边缘细化 |
+| 趣味 | 6 款会动的卡通头像（眨眼、张嘴、微笑、挑眉、视线、头部姿态）和 8 款头饰 |
 
-All effects run on the GPU through an offscreen OpenGL 3.3 context. Faces are tracked with MediaPipe
-models through ONNX Runtime on the CPU. Avatars and headwear are drawn procedurally in shaders, so no
-image assets are needed.
+所有效果都在 GPU 上运行，使用离屏的 OpenGL 3.3 上下文。人脸跟踪用的是 MediaPipe 模型，通过 ONNX Runtime 在 CPU
+上推理。卡通头像和头饰都由着色器程序化绘制，不需要任何图片素材。
 
-## Repository layout
+## 目录结构
 
 ```
-include/lumina/lumina.h   public C API
-src/engine/               engine (pipeline, shaders, face tracking, segmentation, makeup, avatars)
-src/platform/win/         Windows specifics (WGL context, WIC image decoding)
-src/platform/mac/         macOS specifics (CGL context, ImageIO image decoding)
-models/                   MediaPipe models converted to ONNX (Apache 2.0, see models/NOTICE.md)
-tools/lumina_cli.cpp      process raw I420 frames from the command line
-plugins/obs/              OBS Studio filter plugin (GPL-2.0-or-later)
+include/lumina/lumina.h   对外的 C API
+src/engine/               引擎（渲染管线、着色器、人脸跟踪、人像分割、妆容、头像）
+src/platform/win/         Windows 平台相关（WGL 上下文、WIC 图片解码）
+src/platform/mac/         macOS 平台相关（CGL 上下文、ImageIO 图片解码）
+models/                   转换成 ONNX 的 MediaPipe 模型（Apache 2.0，见 models/NOTICE.md）
+tools/lumina_cli.cpp      命令行工具，处理原始 I420 帧
+plugins/obs/              OBS Studio 滤镜插件（GPL-2.0-or-later）
 ```
 
-## Build (Windows)
+## 构建（Windows）
 
-Requirements: Visual Studio 2022 or later, CMake 3.20+. ONNX Runtime is downloaded automatically at
-configure time (or point `ONNXRUNTIME_ROOT` at an extracted release).
+需要 Visual Studio 2022 或更新版本、CMake 3.20+。配置时会自动下载 ONNX Runtime，也可以用 `ONNXRUNTIME_ROOT`
+指向一个已解压的发布包。
 
 ```
 cmake -S . -B build -A x64
@@ -44,9 +41,9 @@ cmake --build build --config Release
 build\bin\Release\lumina-cli.exe build\bin\Release\models 1280 720 in.i420 out.i420 smooth=0.6 whiten=0.3 eye=0.3
 ```
 
-### OBS plugin
+### OBS 插件（Windows）
 
-The plugin needs the libobs headers and an import library for the OBS version you target:
+插件需要目标 OBS 版本的 libobs 头文件和导入库：
 
 ```
 git clone --depth 1 --branch 32.0.4 https://github.com/obsproject/obs-studio.git ..\obs-studio
@@ -55,59 +52,57 @@ cmake -S . -B build -A x64 -DLUMINA_BUILD_OBS_PLUGIN=ON -DOBS_SOURCE_DIR=..\obs-
 cmake --build build --config Release --target lumina-beauty
 ```
 
-`build\obs-plugin\` then contains the plugin in OBS's layout. `lumina-obs-test` (built alongside) runs the
-filter callbacks on I420 / NV12 / YUY2 / UYVY test frames without opening OBS; run it from OBS's
-`bin\64bit` directory with `LUMINA_MODEL_DIR` pointing at `models\`. Install it by copying
-`obs-plugins\64bit\*` to `C:\ProgramData\obs-studio\plugins\lumina-beauty\bin\64bit\` and
-`data\obs-plugins\lumina-beauty\*` to `C:\ProgramData\obs-studio\plugins\lumina-beauty\data\`.
-In OBS, right-click a video capture source, choose **Filters**, add **Lumina Beauty**.
+构建完成后，`build\obs-plugin\` 里就是按 OBS 目录结构整理好的插件。一起构建出来的 `lumina-obs-test` 不用打开 OBS，
+直接用 I420 / NV12 / YUY2 / UYVY 测试帧调用滤镜回调；在 OBS 的 `bin\64bit` 目录下运行，并把 `LUMINA_MODEL_DIR`
+指向 `models\`。安装方法：把 `obs-plugins\64bit\*` 复制到 `C:\ProgramData\obs-studio\plugins\lumina-beauty\bin\64bit\`，
+把 `data\obs-plugins\lumina-beauty\*` 复制到 `C:\ProgramData\obs-studio\plugins\lumina-beauty\data\`。
+在 OBS 里右键视频采集源，选择 **滤镜**，添加 **Lumina 美颜**。
 
-### OBS plugin (macOS)
+### OBS 插件（macOS）
 
-The plugin's architecture must match OBS: the Apple silicon OBS needs an arm64 plugin, the Intel OBS
-(which also runs under Rosetta) needs x86_64. Check with `file /Applications/OBS.app/Contents/MacOS/OBS`.
-Use libobs headers from the same OBS version and link the libobs inside OBS.app:
+插件的架构必须和 OBS 一致：Apple 芯片版 OBS 用 arm64 插件，Intel 版 OBS（包括在 Rosetta 下运行的）用 x86_64 插件。
+可以用 `file /Applications/OBS.app/Contents/MacOS/OBS` 查看。头文件要用同一版本 OBS 的 libobs，并链接 OBS.app 里自带的 libobs：
 
 ```
-brew install simde   # libobs headers from OBS 31+ need SIMDe on Apple silicon
+brew install simde   # OBS 31 起，Apple 芯片上的 libobs 头文件依赖 SIMDe
 git clone --depth 1 --branch 32.2.2 https://github.com/obsproject/obs-studio.git ../obs-studio
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DLUMINA_BUILD_OBS_PLUGIN=ON \
   -DOBS_SOURCE_DIR=../obs-studio \
   -DOBS_LIBRARY=/Applications/OBS.app/Contents/Frameworks/libobs.framework/libobs
-# Intel OBS: add -DCMAKE_OSX_ARCHITECTURES=x86_64 -DONNXRUNTIME_VERSION=1.23.2 (last ONNX Runtime with an x86_64 macOS build)
+# Intel 版 OBS：再加上 -DCMAKE_OSX_ARCHITECTURES=x86_64 -DONNXRUNTIME_VERSION=1.23.2（最后一个提供 x86_64 macOS 包的 ONNX Runtime）
 cmake --build build -j
 ```
 
-This produces `build/obs-plugin/lumina-beauty.plugin`. Copy it to
-`~/Library/Application Support/obs-studio/plugins/` and restart OBS. `build/bin/lumina-obs-test` runs the
-filter test against the libobs in OBS.app (`LUMINA_MODEL_DIR=models build/bin/lumina-obs-test`).
+构建结果是 `build/obs-plugin/lumina-beauty.plugin`，把它复制到 `~/Library/Application Support/obs-studio/plugins/`
+后重启 OBS 即可。`build/bin/lumina-obs-test` 会直接加载 OBS.app 里的 libobs 跑滤镜测试
+（`LUMINA_MODEL_DIR=models build/bin/lumina-obs-test`）。发版（推送 `v*` 标签）时，CI 也会打包好
+`lumina-beauty-macos-arm64.zip`。
 
-If the compiler can't find `<string>` or other C++ headers, an old Command Line Tools install has left
-`/Library/Developer/CommandLineTools/usr/include/c++/v1` behind. Remove that folder, or add
-`-DCMAKE_CXX_FLAGS="-nostdinc++ -isystem $(xcrun --show-sdk-path)/usr/include/c++/v1"`.
+如果编译时提示找不到 `<string>` 等 C++ 头文件，是旧版 Command Line Tools 残留了
+`/Library/Developer/CommandLineTools/usr/include/c++/v1`。删掉这个目录，或者在配置时加上
+`-DCMAKE_CXX_FLAGS="-nostdinc++ -isystem $(xcrun --show-sdk-path)/usr/include/c++/v1"`。
 
-## C API in brief
+## C API 简介
 
 ```c
 lumina_engine* e = lumina_create("path/to/models");
 lumina_set_param(e, LUMINA_SMOOTH, 0.6f);
 lumina_set_param(e, LUMINA_AVATAR, LUMINA_AVATAR_PANDA);
-lumina_process_i420(e, width, height, in, out);   /* or lumina_process_nv12 / _i420_planes */
+lumina_process_i420(e, width, height, in, out);   /* 或 lumina_process_nv12 / _i420_planes */
 lumina_destroy(e);
 ```
 
-Process calls of one engine must come from one thread. Parameters can be set from any thread.
+同一个引擎的处理调用必须在同一个线程里进行；参数可以在任意线程设置。
 
-## Status and roadmap
+## 现状与计划
 
-- Windows x64 and macOS (Apple silicon) build in CI. Linux (EGL) is planned. The OBS plugin builds on Windows and macOS.
-- Frames can be BT.601 or BT.709, full or limited range (`lumina_set_color_space`); the OBS filter
-  picks this up from each frame automatically.
-- The OBS filter handles I420, NV12, YUY2 and UYVY frames; other formats pass through unchanged.
+- CI 构建 Windows x64 和 macOS（Apple 芯片）。Linux（EGL）在计划中。OBS 插件支持 Windows 和 macOS。
+- 支持 BT.601 和 BT.709、全范围和有限范围的帧（`lumina_set_color_space`）；OBS 滤镜会自动读取每一帧的色彩空间。
+- OBS 滤镜支持 I420、NV12、YUY2 和 UYVY 帧，其他格式原样透传。
 
-## License
+## 许可证
 
-- Core SDK: MIT (`LICENSE`)
-- OBS plugin (`plugins/obs/`): GPL-2.0-or-later, because it links libobs
-- Models: Apache 2.0, from Google MediaPipe (`models/NOTICE.md`)
-- ONNX Runtime (downloaded at build time): MIT
+- 核心 SDK：MIT（`LICENSE`）
+- OBS 插件（`plugins/obs/`）：GPL-2.0-or-later，因为它链接了 libobs
+- 模型：Apache 2.0，来自 Google MediaPipe（`models/NOTICE.md`）
+- ONNX Runtime（构建时下载）：MIT
