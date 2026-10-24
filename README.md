@@ -1,0 +1,85 @@
+# Lumina Beauty
+
+Real-time face beauty for video: skin smoothing and whitening, face reshaping, color filters, style
+makeup, virtual background, animated cartoon avatars and headwear. Ships as a small C SDK and as an
+[OBS Studio](https://obsproject.com) video filter.
+
+实时视频美颜：磨皮美白、美型、滤镜、风格妆、虚拟背景、会随表情动的卡通头像和头饰。提供 C 语言 SDK，
+以及可直接加在摄像头上的 OBS 滤镜插件。
+
+## Features
+
+| Area | Effects |
+|---|---|
+| Skin | smoothing (edge-aware, keeps eyes/brows/lips sharp), whitening, sharpen, clarity, whiter teeth, dark circles, smile lines |
+| Face shape | bigger eyes, slim face, narrow face, cheekbones, jaw, nose width, forehead, smaller head |
+| Color | 15 filters, 11 style looks (color grade + makeup: lips, blush, brows, eye shadow, contour, foundation), temperature / tint / saturation / brightness / contrast |
+| Background | blur or replace, with a hair-aware person mask and edge refinement |
+| Fun | 6 animated cartoon avatars (blink, mouth, smile, brows, gaze, head pose) and 8 headwear items |
+
+All effects run on the GPU through an offscreen OpenGL 3.3 context. Faces are tracked with MediaPipe
+models through ONNX Runtime on the CPU. Avatars and headwear are drawn procedurally in shaders, so no
+image assets are needed.
+
+## Repository layout
+
+```
+include/lumina/lumina.h   public C API
+src/engine/               engine (pipeline, shaders, face tracking, segmentation, makeup, avatars)
+src/platform/win/         Windows specifics (WGL context, WIC image decoding)
+models/                   MediaPipe models converted to ONNX (Apache 2.0, see models/NOTICE.md)
+tools/lumina_cli.cpp      process raw I420 frames from the command line
+plugins/obs/              OBS Studio filter plugin (GPL-2.0-or-later)
+```
+
+## Build (Windows)
+
+Requirements: Visual Studio 2022 or later, CMake 3.20+. ONNX Runtime is downloaded automatically at
+configure time (or point `ONNXRUNTIME_ROOT` at an extracted release).
+
+```
+cmake -S . -B build -A x64
+cmake --build build --config Release
+build\bin\Release\lumina-cli.exe build\bin\Release\models 1280 720 in.i420 out.i420 smooth=0.6 whiten=0.3 eye=0.3
+```
+
+### OBS plugin
+
+The plugin needs the libobs headers and an import library for the OBS version you target:
+
+```
+git clone --depth 1 --branch 32.0.4 https://github.com/obsproject/obs-studio.git ..\obs-studio
+.\scripts\make-obs-import-lib.ps1 -ObsDir "C:\Program Files\obs-studio" -OutDir build\obs-lib
+cmake -S . -B build -A x64 -DLUMINA_BUILD_OBS_PLUGIN=ON -DOBS_SOURCE_DIR=..\obs-studio -DOBS_LIBRARY=build\obs-lib\obs.lib
+cmake --build build --config Release --target lumina-beauty
+```
+
+`build\obs-plugin\` then contains the plugin in OBS's layout. Install it by copying
+`obs-plugins\64bit\*` to `C:\ProgramData\obs-studio\plugins\lumina-beauty\bin\64bit\` and
+`data\obs-plugins\lumina-beauty\*` to `C:\ProgramData\obs-studio\plugins\lumina-beauty\data\`.
+In OBS, right-click a video capture source, choose **Filters**, add **Lumina Beauty**.
+
+## C API in brief
+
+```c
+lumina_engine* e = lumina_create("path/to/models");
+lumina_set_param(e, LUMINA_SMOOTH, 0.6f);
+lumina_set_param(e, LUMINA_AVATAR, LUMINA_AVATAR_PANDA);
+lumina_process_i420(e, width, height, in, out);   /* or lumina_process_nv12 / _i420_planes */
+lumina_destroy(e);
+```
+
+Process calls of one engine must come from one thread. Parameters can be set from any thread.
+
+## Status and roadmap
+
+- Windows x64 works. macOS (CGL/Metal-backed OpenGL) and Linux (EGL) backends are planned.
+- Input is assumed to be full-range BT.601; limited-range / BT.709 handling is planned.
+- The OBS filter handles I420, NV12, YUY2 and UYVY frames.
+
+## License
+
+- Core SDK: MIT (`LICENSE`)
+- OBS plugin (`plugins/obs/`): GPL-2.0-or-later, because it links libobs
+- Models: Apache 2.0, from Google MediaPipe (`models/NOTICE.md`)
+- ONNX Runtime (downloaded at build time): MIT
