@@ -122,6 +122,7 @@ private:
 
     unsigned int m_texMask = 0;        ///< 人像掩膜
     unsigned int m_texBackground = 0;  ///< 背景图片
+    unsigned int m_texEmpty = 0;       ///< 1x1 黑图，占位未使用的采样器
     int m_backgroundW = 0;
     int m_backgroundH = 0;
     unsigned int m_progRgb2Y = 0;

@@ -663,6 +663,14 @@ bool LmPipeline::Init() {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
+    // 着色器声明了但这一帧用不到的采样器绑这张 1x1 黑图，不绑 0：macOS 的 OpenGL 会对空纹理单元报警告
+    const uint8_t black[4] = {0, 0, 0, 0};
+    glGenTextures(1, &m_texEmpty);
+    glBindTexture(GL_TEXTURE_2D, m_texEmpty);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, black);
+
     m_bInit = true;
     return true;
 }
@@ -685,13 +693,13 @@ void LmPipeline::Release() {
     m_progWarp = m_progRgb2Y = m_progRgb2UV = 0;
     m_progGuidePack = m_progBox = m_progGuideCoef = m_progMakeup = m_progAvatar = 0;
 
-    const GLuint textures[] = {m_texMask, m_texBackground};
+    const GLuint textures[] = {m_texMask, m_texBackground, m_texEmpty};
     for (GLuint tex : textures) {
         if (tex != 0) {
             glDeleteTextures(1, &tex);
         }
     }
-    m_texMask = m_texBackground = 0;
+    m_texMask = m_texBackground = m_texEmpty = 0;
 
     if (m_vbo != 0) {
         glDeleteBuffers(1, &m_vbo);
@@ -917,7 +925,7 @@ void LmPipeline::DrawMesh(unsigned int source, const Target& target) {
 
 void LmPipeline::BindTexture(int unit, unsigned int tex) {
     glActiveTexture(GL_TEXTURE0 + unit);
-    glBindTexture(GL_TEXTURE_2D, tex);
+    glBindTexture(GL_TEXTURE_2D, tex != 0 ? tex : m_texEmpty);
 }
 
 bool LmPipeline::Render(int w, int h, const uint8_t* in, uint8_t* out, const LmParams& params,

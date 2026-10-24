@@ -40,3 +40,37 @@ jobs:
           python tests/make_test_frame.py frame.i420 640 480
           "$bin/lumina-cli" "$bin/models" 640 480 frame.i420 out.i420 smooth=1 whiten=1 filter=3 filter_intensity=1 --repeat 3
           python tests/check_changed.py frame.i420 out.i420
+
+  # macOS OBS 插件：和 macOS 核心构建一样只在发版或手动触发时跑，产出可直接安装的 lumina-beauty.plugin
+  obs-plugin-macos:
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    runs-on: macos-latest
+    env:
+      OBS_VERSION: "32.2.2"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: OBS headers and libobs
+        run: |
+          brew install simde
+          git clone --depth 1 --branch "$OBS_VERSION" https://github.com/obsproject/obs-studio.git ../obs-studio
+          curl -fsSL -o obs.dmg "https://github.com/obsproject/obs-studio/releases/download/$OBS_VERSION/OBS-Studio-$OBS_VERSION-macOS-Apple.dmg"
+          hdiutil attach -nobrowse -readonly -mountpoint /tmp/obs obs.dmg
+
+      - name: Build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DLUMINA_BUILD_OBS_PLUGIN=ON \
+            -DOBS_SOURCE_DIR=$PWD/../obs-studio \
+            -DOBS_LIBRARY=/tmp/obs/OBS.app/Contents/Frameworks/libobs.framework/libobs
+          cmake --build build -j
+
+      - name: Filter test
+        run: LUMINA_MODEL_DIR=$PWD/models build/bin/lumina-obs-test
+
+      - name: Package
+        run: cd build/obs-plugin && ditto -c -k --keepParent lumina-beauty.plugin lumina-beauty-macos-arm64.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lumina-beauty-obs-macos-arm64
+          path: build/obs-plugin/lumina-beauty-macos-arm64.zip

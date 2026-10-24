@@ -114,14 +114,14 @@ bool LmOrtModel::Init(const std::string& path, int threads) {
          Check(g_api->SessionGetInputName(impl->session, 0, allocator, &name), "GetInputName");
     if (ok) {
         impl->inputName = name;
-        g_api->AllocatorFree(allocator, name);
+        (void)g_api->AllocatorFree(allocator, name);
         ok = Check(g_api->SessionGetOutputCount(impl->session, &outputCount), "GetOutputCount");
     }
     for (size_t i = 0; ok && i < outputCount; ++i) {
         ok = Check(g_api->SessionGetOutputName(impl->session, i, allocator, &name), "GetOutputName");
         if (ok) {
             impl->outputNames.push_back(name);
-            g_api->AllocatorFree(allocator, name);
+            (void)g_api->AllocatorFree(allocator, name);
         }
     }
 
