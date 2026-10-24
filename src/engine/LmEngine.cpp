@@ -266,6 +266,15 @@ LUMINA_API float lumina_get_param(lumina_engine* e, lumina_param param) {
     return e->values[param];
 }
 
+LUMINA_API void lumina_set_color_space(lumina_engine* e, int matrix, int full_range) {
+    if (!e) {
+        return;
+    }
+    std::lock_guard<std::mutex> lock(e->paramsMutex);
+    e->params.colorMatrix = matrix == 709 ? 709 : 601;
+    e->params.fullRange = full_range != 0;
+}
+
 LUMINA_API int lumina_set_background_image(lumina_engine* e, const char* path) {
     if (!e) {
         return 0;

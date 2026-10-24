@@ -54,7 +54,9 @@ cmake -S . -B build -A x64 -DLUMINA_BUILD_OBS_PLUGIN=ON -DOBS_SOURCE_DIR=..\obs-
 cmake --build build --config Release --target lumina-beauty
 ```
 
-`build\obs-plugin\` then contains the plugin in OBS's layout. Install it by copying
+`build\obs-plugin\` then contains the plugin in OBS's layout. `lumina-obs-test` (built alongside) runs the
+filter callbacks on I420 / NV12 / YUY2 / UYVY test frames without opening OBS; run it from OBS's
+`bin4bit` directory with `LUMINA_MODEL_DIR` pointing at `models\`. Install it by copying
 `obs-plugins\64bit\*` to `C:\ProgramData\obs-studio\plugins\lumina-beauty\bin\64bit\` and
 `data\obs-plugins\lumina-beauty\*` to `C:\ProgramData\obs-studio\plugins\lumina-beauty\data\`.
 In OBS, right-click a video capture source, choose **Filters**, add **Lumina Beauty**.
@@ -74,8 +76,9 @@ Process calls of one engine must come from one thread. Parameters can be set fro
 ## Status and roadmap
 
 - Windows x64 works. macOS (CGL/Metal-backed OpenGL) and Linux (EGL) backends are planned.
-- Input is assumed to be full-range BT.601; limited-range / BT.709 handling is planned.
-- The OBS filter handles I420, NV12, YUY2 and UYVY frames.
+- Frames can be BT.601 or BT.709, full or limited range (`lumina_set_color_space`); the OBS filter
+  picks this up from each frame automatically.
+- The OBS filter handles I420, NV12, YUY2 and UYVY frames; other formats pass through unchanged.
 
 ## License
 

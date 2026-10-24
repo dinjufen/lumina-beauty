@@ -134,6 +134,13 @@ LUMINA_API void lumina_destroy(lumina_engine* engine);
 LUMINA_API void lumina_set_param(lumina_engine* engine, lumina_param param, float value);
 LUMINA_API float lumina_get_param(lumina_engine* engine, lumina_param param);
 
+/**
+ * Color space of the frames passed to the process functions; output uses the same.
+ * @param matrix     601 (BT.601, the default) or 709 (BT.709, typical for HD webcams)
+ * @param full_range 1 for full range (0-255, the default), 0 for limited range (Y 16-235, UV 16-240)
+ */
+LUMINA_API void lumina_set_color_space(lumina_engine* engine, int matrix, int full_range);
+
 /** Background image for LUMINA_BACKGROUND_IMAGE: an image file (png/jpg/bmp), or raw RGBA rows top to bottom. */
 LUMINA_API int lumina_set_background_image(lumina_engine* engine, const char* path_utf8);
 LUMINA_API int lumina_set_background_rgba(lumina_engine* engine, const uint8_t* rgba, int width, int height);

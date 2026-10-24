@@ -30,11 +30,20 @@ out vec4 oColor;
 uniform sampler2D uTexY;
 uniform sampler2D uTexU;
 uniform sampler2D uTexV;
+// 输入的色彩空间：uRange = (亮度偏移, 亮度缩放, 色度缩放)，uKr/uKb 为矩阵系数（BT.601 或 BT.709）
+uniform vec3 uRange;
+uniform vec2 uKrKb;
 void main() {
-    float y = texture(uTexY, vUV).r;
-    float u = texture(uTexU, vUV).r - 0.5;
-    float v = texture(uTexV, vUV).r - 0.5;
-    oColor = vec4(y + 1.402 * v, y - 0.344136 * u - 0.714136 * v, y + 1.772 * u, 1.0);
+    float y = (texture(uTexY, vUV).r - uRange.x) * uRange.y;
+    float u = (texture(uTexU, vUV).r - 0.5) * uRange.z;
+    float v = (texture(uTexV, vUV).r - 0.5) * uRange.z;
+    float kr = uKrKb.x;
+    float kb = uKrKb.y;
+    float kg = 1.0 - kr - kb;
+    float r = y + 2.0 * (1.0 - kr) * v;
+    float b = y + 2.0 * (1.0 - kb) * u;
+    float g = (y - kr * r - kb * b) / kg;
+    oColor = vec4(r, g, b, 1.0);
 }
 )";
 
@@ -452,9 +461,12 @@ precision highp float;
 in vec2 vUV;
 out vec4 oColor;
 uniform sampler2D uTex;
+uniform vec3 uRange;
+uniform vec2 uKrKb;
 void main() {
     vec3 c = texture(uTex, vUV).rgb;
-    oColor = vec4(dot(c, vec3(0.299, 0.587, 0.114)), 0.0, 0.0, 1.0);
+    float y = dot(c, vec3(uKrKb.x, 1.0 - uKrKb.x - uKrKb.y, uKrKb.y));
+    oColor = vec4(y / uRange.y + uRange.x, 0.0, 0.0, 1.0);
 }
 )";
 
@@ -465,12 +477,17 @@ precision highp float;
 in vec2 vUV;
 out vec4 oColor;
 uniform sampler2D uTex;
+uniform vec3 uRange;
+uniform vec2 uKrKb;
 void main() {
     bool isU = vUV.y < 0.5;
     vec2 uv = vec2(vUV.x, isU ? vUV.y * 2.0 : (vUV.y - 0.5) * 2.0);
     vec3 c = texture(uTex, uv).rgb;
-    float value = isU ? dot(c, vec3(-0.168736, -0.331264, 0.5)) : dot(c, vec3(0.5, -0.418688, -0.081312));
-    oColor = vec4(value + 0.5, 0.0, 0.0, 1.0);
+    float kr = uKrKb.x;
+    float kb = uKrKb.y;
+    float y = dot(c, vec3(kr, 1.0 - kr - kb, kb));
+    float value = isU ? (c.b - y) / (2.0 * (1.0 - kb)) : (c.r - y) / (2.0 * (1.0 - kr));
+    oColor = vec4(value / uRange.z + 0.5, 0.0, 0.0, 1.0);
 }
 )";
 
@@ -933,6 +950,18 @@ bool LmPipeline::Render(int w, int h, const uint8_t* in, uint8_t* out, const LmP
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w / 2, h / 2, GL_RED, GL_UNSIGNED_BYTE, planeU);
     BindTexture(2, m_texV);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w / 2, h / 2, GL_RED, GL_UNSIGNED_BYTE, planeV);
+
+    // 色彩空间：有限范围的亮度在 [16, 235]、色度在 [16, 240]
+    const float rangeY0 = params.fullRange ? 0.0f : 16.0f / 255.0f;
+    const float rangeYS = params.fullRange ? 1.0f : 255.0f / 219.0f;
+    const float rangeCS = params.fullRange ? 1.0f : 255.0f / 224.0f;
+    const float kr = params.colorMatrix == 709 ? 0.2126f : 0.299f;
+    const float kb = params.colorMatrix == 709 ? 0.0722f : 0.114f;
+    for (GLuint program : {m_progYuv2Rgb, m_progRgb2Y, m_progRgb2UV}) {
+        glUseProgram(program);
+        glUniform3f(glGetUniformLocation(program, "uRange"), rangeY0, rangeYS, rangeCS);
+        glUniform2f(glGetUniformLocation(program, "uKrKb"), kr, kb);
+    }
 
     glUseProgram(m_progYuv2Rgb);
     SetInt(m_progYuv2Rgb, "uTexY", 0);

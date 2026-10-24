@@ -31,3 +31,11 @@ add_custom_command(TARGET lumina-beauty POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ONNXRUNTIME_DLL} ${_pkg}/obs-plugins/64bit/
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/data ${_pkg}/data/obs-plugins/lumina-beauty
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/models ${_pkg}/data/obs-plugins/lumina-beauty/models)
+
+# 插件逻辑测试：把插件源码编进测试程序，直接调用滤镜回调。在 OBS 的 bin 目录下运行（需要 obs.dll）
+add_executable(lumina-obs-test tests/filter_test.cpp)
+target_include_directories(lumina-obs-test PRIVATE ${OBS_SOURCE_DIR}/libobs ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(lumina-obs-test PRIVATE lumina_static onnxruntime_imported ${OBS_LIBRARY})
+add_custom_command(TARGET lumina-obs-test POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ONNXRUNTIME_DLL} $<TARGET_FILE_DIR:lumina-obs-test>)
+set_target_properties(lumina-obs-test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)

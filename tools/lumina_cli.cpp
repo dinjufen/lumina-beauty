@@ -3,7 +3,7 @@
 // usage: lumina-cli <models dir> <width> <height> <in.i420> <out.i420> [name=value ...] [--repeat N]
 //   names: smooth whiten sharpen clarity eye slim narrow cheekbone jaw nose forehead shrink_head teeth pouch folds
 //          temperature tint saturation brightness contrast filter filter_intensity style style_color style_makeup
-//          background avatar headwear, plus background_image=<path>
+//          background avatar headwear, plus background_image=<path>, matrix=601|709, full_range=0|1
 //   The input file may contain several frames back to back; each is processed in turn.
 //   --repeat N processes every frame N times (lets temporal smoothing settle) and reports the average time.
 #include <chrono>
@@ -65,6 +65,13 @@ int main(int argc, char** argv) {
             continue;
         }
         const std::string key(argv[i], eq - argv[i]);
+        if (key == "matrix" || key == "full_range") {
+            static int matrix = 601;
+            static int full = 1;
+            (key == "matrix" ? matrix : full) = atoi(eq + 1);
+            lumina_set_color_space(engine, matrix, full);
+            continue;
+        }
         if (key == "background_image") {
             lumina_set_background_image(engine, eq + 1);
             continue;

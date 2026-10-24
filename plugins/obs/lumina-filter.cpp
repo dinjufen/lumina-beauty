@@ -6,6 +6,7 @@
 #include <obs-module.h>
 #include <util/platform.h>
 
+#include <cstdlib>
 #include <cstring>
 #include <string>
 #include <vector>
@@ -118,8 +119,10 @@ void Update(void* data, obs_data_t* settings) {
 void* Create(obs_data_t* settings, obs_source_t* source) {
     Filter* f = new Filter();
     f->source = source;
-    char* models = obs_module_file("models");
-    f->engine = lumina_create(models ? models : "");
+    // LUMINA_MODEL_DIR 可以覆盖模型目录，便于开发和测试
+    const char* overrideDir = getenv("LUMINA_MODEL_DIR");
+    char* models = overrideDir ? nullptr : obs_module_file("models");
+    f->engine = lumina_create(overrideDir ? overrideDir : (models ? models : ""));
     bfree(models);
     if (!f->engine) {
         blog(LOG_ERROR, "[lumina] failed to create the engine");
@@ -218,6 +221,13 @@ void I420ToPacked(const uint8_t* y, const uint8_t* u, const uint8_t* v, bool uyv
     }
 }
 
+// obs_source_frame 只带 YUV 到 RGB 的矩阵。Cr 到 R 的系数除以亮度系数，消去范围的影响后：
+// BT.709 约为 1.57（有限范围 1.54），BT.601 约为 1.40（有限范围 1.37）
+bool IsBt709(const obs_source_frame* frame) {
+    const float yScale = frame->color_matrix[0];
+    return yScale > 0.0f && frame->color_matrix[2] / yScale > 1.47f;
+}
+
 obs_source_frame* FilterVideo(void* data, obs_source_frame* frame) {
     Filter* f = static_cast<Filter*>(data);
     if (!f->engine || !frame || (frame->width & 1) || (frame->height & 1)) {
@@ -225,6 +235,8 @@ obs_source_frame* FilterVideo(void* data, obs_source_frame* frame) {
     }
     const int w = static_cast<int>(frame->width);
     const int h = static_cast<int>(frame->height);
+    // 按画面实际的色彩空间转换，摄像头常见的是 BT.709 有限范围
+    lumina_set_color_space(f->engine, IsBt709(frame) ? 709 : 601, frame->full_range ? 1 : 0);
     switch (frame->format) {
         case VIDEO_FORMAT_I420:
             lumina_process_i420_planes(f->engine, w, h, frame->data[0], frame->linesize[0], frame->data[1],

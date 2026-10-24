@@ -63,6 +63,10 @@ struct LmParams {
     int avatar = 0;
     int headwear = 0;
 
+    // 输入画面的色彩空间：矩阵 601 或 709，是否全范围
+    int colorMatrix = 601;
+    bool fullRange = true;
+
     // 虚拟背景：0 不使用，1 背景虚化，2 背景图片
     int background = 0;
 };
