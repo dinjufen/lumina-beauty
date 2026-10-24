@@ -21,9 +21,21 @@ include(cmake/OnnxRuntime.cmake)
 file(GLOB LUMINA_ENGINE_SOURCES CONFIGURE_DEPENDS src/engine/*.cpp)
 if(WIN32)
     file(GLOB LUMINA_PLATFORM_SOURCES CONFIGURE_DEPENDS src/platform/win/*.cpp)
+elseif(APPLE)
+    file(GLOB LUMINA_PLATFORM_SOURCES CONFIGURE_DEPENDS src/platform/mac/*.cpp)
 else()
-    message(FATAL_ERROR "Only Windows is supported for now; macOS and Linux backends are planned.")
+    message(FATAL_ERROR "Only Windows and macOS are supported for now; a Linux (EGL) backend is planned.")
 endif()
+
+# 各平台的系统库
+function(lumina_link_platform target scope)
+    if(WIN32)
+        target_link_libraries(${target} ${scope} opengl32 windowscodecs ole32)
+    elseif(APPLE)
+        target_link_libraries(${target} ${scope} "-framework OpenGL" "-framework CoreFoundation"
+                              "-framework ApplicationServices" "-framework ImageIO")
+    endif()
+endfunction()
 
 add_library(lumina SHARED ${LUMINA_ENGINE_SOURCES} ${LUMINA_PLATFORM_SOURCES})
 target_include_directories(lumina
@@ -31,28 +43,29 @@ target_include_directories(lumina
     PRIVATE src/engine)
 target_compile_definitions(lumina PRIVATE LUMINA_BUILD_SHARED INTERFACE LUMINA_USE_SHARED)
 target_link_libraries(lumina PRIVATE onnxruntime_imported)
-if(WIN32)
-    target_link_libraries(lumina PRIVATE opengl32 windowscodecs ole32)
-endif()
+lumina_link_platform(lumina PRIVATE)
 set_target_properties(lumina PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    BUILD_RPATH "@loader_path"
+    INSTALL_RPATH "@loader_path")
 
 # 运行目录里放好 onnxruntime 与模型，便于直接运行工具和调试
 add_custom_command(TARGET lumina POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ONNXRUNTIME_DLL} $<TARGET_FILE_DIR:lumina>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ONNXRUNTIME_DLL} ${ONNXRUNTIME_EXTRA_LIBS} $<TARGET_FILE_DIR:lumina>
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/models $<TARGET_FILE_DIR:lumina>/models)
 
 install(TARGETS lumina RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
 install(FILES include/lumina/lumina.h DESTINATION include/lumina)
-install(FILES ${ONNXRUNTIME_DLL} DESTINATION bin)
+install(FILES ${ONNXRUNTIME_DLL} ${ONNXRUNTIME_EXTRA_LIBS} DESTINATION bin)
 install(DIRECTORY models/ DESTINATION models FILES_MATCHING PATTERN "*.onnx" PATTERN "*.txt" PATTERN "*.md")
 
 # ---------------------------------------------------------------- tools
 if(LUMINA_BUILD_TOOLS)
     add_executable(lumina-cli tools/lumina_cli.cpp)
     target_link_libraries(lumina-cli PRIVATE lumina)
-    set_target_properties(lumina-cli PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    set_target_properties(lumina-cli PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        BUILD_RPATH "@loader_path" INSTALL_RPATH "@loader_path")
 endif()
 
 # ---------------------------------------------------------------- OBS plugin

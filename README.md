@@ -27,6 +27,7 @@ image assets are needed.
 include/lumina/lumina.h   public C API
 src/engine/               engine (pipeline, shaders, face tracking, segmentation, makeup, avatars)
 src/platform/win/         Windows specifics (WGL context, WIC image decoding)
+src/platform/mac/         macOS specifics (CGL context, ImageIO image decoding)
 models/                   MediaPipe models converted to ONNX (Apache 2.0, see models/NOTICE.md)
 tools/lumina_cli.cpp      process raw I420 frames from the command line
 plugins/obs/              OBS Studio filter plugin (GPL-2.0-or-later)
@@ -75,7 +76,7 @@ Process calls of one engine must come from one thread. Parameters can be set fro
 
 ## Status and roadmap
 
-- Windows x64 works. macOS (CGL/Metal-backed OpenGL) and Linux (EGL) backends are planned.
+- Windows x64 and macOS (Apple silicon) build in CI. Linux (EGL) is planned; the OBS plugin is Windows-only for now.
 - Frames can be BT.601 or BT.709, full or limited range (`lumina_set_color_space`); the OBS filter
   picks this up from each frame automatically.
 - The OBS filter handles I420, NV12, YUY2 and UYVY frames; other formats pass through unchanged.

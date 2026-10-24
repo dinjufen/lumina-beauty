@@ -1,0 +1,34 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Smoke test
+        shell: bash
+        run: |
+          bin=build/bin
+          [ -d build/bin/Release ] && bin=build/bin/Release
+          python tests/make_test_frame.py frame.i420 640 480
+          "$bin/lumina-cli" "$bin/models" 640 480 frame.i420 out.i420 smooth=1 whiten=1 filter=3 filter_intensity=1 --repeat 3
+          python tests/check_changed.py frame.i420 out.i420

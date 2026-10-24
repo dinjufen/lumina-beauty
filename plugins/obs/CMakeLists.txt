@@ -11,9 +11,7 @@ endif()
 add_library(lumina_static STATIC ${LUMINA_ENGINE_SOURCES} ${LUMINA_PLATFORM_SOURCES})
 target_include_directories(lumina_static PUBLIC ${PROJECT_SOURCE_DIR}/include PRIVATE ${PROJECT_SOURCE_DIR}/src/engine)
 target_link_libraries(lumina_static PRIVATE onnxruntime_imported)
-if(WIN32)
-    target_link_libraries(lumina_static PUBLIC opengl32 windowscodecs ole32)
-endif()
+lumina_link_platform(lumina_static PUBLIC)
 
 add_library(lumina-beauty MODULE lumina-filter.cpp)
 target_include_directories(lumina-beauty PRIVATE

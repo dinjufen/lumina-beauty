@@ -5,6 +5,10 @@ if(NOT ONNXRUNTIME_ROOT)
     if(WIN32)
         set(_ort_pkg "onnxruntime-win-x64-${ONNXRUNTIME_VERSION}")
         set(_ort_ext "zip")
+    elseif(APPLE)
+        # 官方只发布 Apple 芯片（arm64）的 macOS 包
+        set(_ort_pkg "onnxruntime-osx-arm64-${ONNXRUNTIME_VERSION}")
+        set(_ort_ext "tgz")
     else()
         message(FATAL_ERROR "Set ONNXRUNTIME_ROOT to an extracted ONNX Runtime release")
     endif()
@@ -28,7 +32,10 @@ find_library(ONNXRUNTIME_LIB onnxruntime PATHS "${ONNXRUNTIME_ROOT}/lib" NO_DEFA
 if(WIN32)
     find_file(ONNXRUNTIME_DLL onnxruntime.dll PATHS "${ONNXRUNTIME_ROOT}/lib" "${ONNXRUNTIME_ROOT}/bin" NO_DEFAULT_PATH REQUIRED)
 else()
-    set(ONNXRUNTIME_DLL "${ONNXRUNTIME_LIB}")
+    # 只拷贝真实文件；版本号符号链接由加载器按 install name 解析
+    get_filename_component(ONNXRUNTIME_DLL "${ONNXRUNTIME_LIB}" REALPATH)
+    file(GLOB ONNXRUNTIME_EXTRA_LIBS "${ONNXRUNTIME_ROOT}/lib/libonnxruntime*.dylib")
+    list(REMOVE_ITEM ONNXRUNTIME_EXTRA_LIBS "${ONNXRUNTIME_DLL}")
 endif()
 
 add_library(onnxruntime_imported INTERFACE)
