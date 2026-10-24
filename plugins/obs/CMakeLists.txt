@@ -9,6 +9,16 @@ if(NOT OBS_SOURCE_DIR OR NOT OBS_LIBRARY)
     message(FATAL_ERROR "Set OBS_SOURCE_DIR and OBS_LIBRARY to build the OBS plugin")
 endif()
 
+# OBS 31 起 libobs 头文件在非 x86 平台上依赖外部的 SIMDe（Apple 芯片上：brew install simde）
+set(_obs_includes ${OBS_SOURCE_DIR}/libobs ${CMAKE_CURRENT_SOURCE_DIR}/include)   # obsconfig.h
+if(APPLE AND NOT CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64")
+    find_path(SIMDE_INCLUDE_DIR simde/x86/sse2.h HINTS /opt/homebrew/include /usr/local/include)
+    if(NOT SIMDE_INCLUDE_DIR)
+        message(FATAL_ERROR "SIMDe not found: brew install simde, or set SIMDE_INCLUDE_DIR")
+    endif()
+    list(APPEND _obs_includes ${SIMDE_INCLUDE_DIR})
+endif()
+
 # 插件静态链接美颜核心，只额外带一个 onnxruntime.dll
 add_library(lumina_static STATIC ${LUMINA_ENGINE_SOURCES} ${LUMINA_PLATFORM_SOURCES})
 target_include_directories(lumina_static PUBLIC ${PROJECT_SOURCE_DIR}/include PRIVATE ${PROJECT_SOURCE_DIR}/src/engine)
@@ -16,9 +26,7 @@ target_link_libraries(lumina_static PRIVATE onnxruntime_imported)
 lumina_link_platform(lumina_static PUBLIC)
 
 add_library(lumina-beauty MODULE lumina-filter.cpp)
-target_include_directories(lumina-beauty PRIVATE
-    ${OBS_SOURCE_DIR}/libobs
-    ${CMAKE_CURRENT_SOURCE_DIR}/include)   # obsconfig.h
+target_include_directories(lumina-beauty PRIVATE ${_obs_includes})
 target_link_libraries(lumina-beauty PRIVATE lumina_static onnxruntime_imported ${OBS_LIBRARY})
 
 if(APPLE)
@@ -57,7 +65,7 @@ endif()
 
 # 插件逻辑测试：把插件源码编进测试程序，直接调用滤镜回调。在 OBS 的 bin 目录下运行（需要 obs.dll）
 add_executable(lumina-obs-test tests/filter_test.cpp)
-target_include_directories(lumina-obs-test PRIVATE ${OBS_SOURCE_DIR}/libobs ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(lumina-obs-test PRIVATE ${_obs_includes})
 target_link_libraries(lumina-obs-test PRIVATE lumina_static onnxruntime_imported ${OBS_LIBRARY})
 add_custom_command(TARGET lumina-obs-test POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ONNXRUNTIME_DLL} ${ONNXRUNTIME_EXTRA_LIBS} $<TARGET_FILE_DIR:lumina-obs-test>)

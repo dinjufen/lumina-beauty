@@ -69,7 +69,8 @@ The plugin's architecture must match OBS: the Apple silicon OBS needs an arm64 p
 Use libobs headers from the same OBS version and link the libobs inside OBS.app:
 
 ```
-git clone --depth 1 --branch 30.2.3 https://github.com/obsproject/obs-studio.git ../obs-studio
+brew install simde   # libobs headers from OBS 31+ need SIMDe on Apple silicon
+git clone --depth 1 --branch 32.2.2 https://github.com/obsproject/obs-studio.git ../obs-studio
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DLUMINA_BUILD_OBS_PLUGIN=ON \
   -DOBS_SOURCE_DIR=../obs-studio \
   -DOBS_LIBRARY=/Applications/OBS.app/Contents/Frameworks/libobs.framework/libobs
