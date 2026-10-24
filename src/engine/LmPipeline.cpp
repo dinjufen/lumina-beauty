@@ -797,8 +797,9 @@ bool LmPipeline::Resize(int w, int h) {
     bool ok = CreateTarget(m_rgb, w, h, false);
     ok = CreateTarget(m_halfA, halfW, halfH, false) && ok;
     ok = CreateTarget(m_halfB, halfW, halfH, false) && ok;
-    ok = CreateTarget(m_makeupA, halfW, halfH, false) && ok;
-    ok = CreateTarget(m_makeupB, halfW, halfH, false) && ok;
+    // 妆容图层用全分辨率，眼线和睫毛这类细线在半分辨率下会糊掉
+    ok = CreateTarget(m_makeupA, w, h, false) && ok;
+    ok = CreateTarget(m_makeupB, w, h, false) && ok;
     ok = CreateTarget(m_quarterA, quarterW, quarterH, false) && ok;
     ok = CreateTarget(m_quarterB, quarterW, quarterH, false) && ok;
     ok = CreateTarget(m_final, w, h, false) && ok;
@@ -1009,7 +1010,7 @@ bool LmPipeline::Render(int w, int h, const uint8_t* in, uint8_t* out, const LmP
         DrawTo(m_halfB);
     }
 
-    // 美妆图层：半分辨率上画妆容三角形，再轻微模糊一次让边缘柔和
+    // 美妆图层：画妆容三角形，再轻微模糊一次让边缘柔和
     const bool hasMakeupLayer = !makeup.empty();
     if (hasMakeupLayer) {
         glBindFramebuffer(GL_FRAMEBUFFER, m_makeupA.fbo);
@@ -1032,10 +1033,10 @@ bool LmPipeline::Render(int w, int h, const uint8_t* in, uint8_t* out, const LmP
         SetInt(m_progBox, "uTex", 0);
         SetInt(m_progBox, "uRadius", 1);
         BindTexture(0, m_makeupA.tex);
-        SetVec2(m_progBox, "uStep", scale / m_makeupA.w, 0.0f);
+        SetVec2(m_progBox, "uStep", 1.0f / m_makeupA.w, 0.0f);
         DrawTo(m_makeupB);
         BindTexture(0, m_makeupB.tex);
-        SetVec2(m_progBox, "uStep", 0.0f, scale / m_makeupA.h);
+        SetVec2(m_progBox, "uStep", 0.0f, 1.0f / m_makeupA.h);
         DrawTo(m_makeupA);
     }
 

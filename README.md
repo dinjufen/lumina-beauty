@@ -13,7 +13,7 @@ makeup, virtual background, animated cartoon avatars and headwear. Ships as a sm
 |---|---|
 | Skin | smoothing (edge-aware, keeps eyes/brows/lips sharp), whitening, sharpen, clarity, whiter teeth, dark circles, smile lines |
 | Face shape | bigger eyes, slim face, narrow face, cheekbones, jaw, nose width, forehead, smaller head |
-| Color | 15 filters, 11 style looks (color grade + makeup: lips, blush, brows, eye shadow, contour, foundation), temperature / tint / saturation / brightness / contrast |
+| Color | 15 filters, 11 style looks (color grade + makeup: lips, blush, brows, eye shadow, eyeliner, lashes, contour, foundation), temperature / tint / saturation / brightness / contrast |
 | Background | blur or replace, with a hair-aware person mask and edge refinement |
 | Fun | 6 animated cartoon avatars (blink, mouth, smile, brows, gaze, head pose) and 8 headwear items |
 

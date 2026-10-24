@@ -63,6 +63,12 @@ const MakeupLook kLooks[] = {
 };
 const int kLookCount = sizeof(kLooks) / sizeof(kLooks[0]);
 
+// 眼线与睫毛的浓度，顺序同 kLooks：白皙、韩系、元气、温暖、欧美、优雅、甜美、深邃、伪素颜、学姐、学妹
+const float kLinerOpacity[] = {0.50f, 0.45f, 0.40f, 0.50f, 0.80f, 0.65f, 0.45f, 0.85f, 0.15f, 0.60f, 0.40f};
+const float kLashOpacity[] = {0.50f, 0.55f, 0.60f, 0.50f, 0.80f, 0.60f, 0.70f, 0.80f, 0.30f, 0.60f, 0.65f};
+const float kLinerColor[3] = {0.22f, 0.18f, 0.18f};
+const float kLashColor[3] = {0.12f, 0.10f, 0.10f};
+
 // MediaPipe Face Mesh 的关键点序号
 const int kLipOuter[] = {61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291, 375, 321, 405, 314, 17, 84, 181, 91, 146};
 const int kLipInner[] = {78, 191, 80, 81, 82, 13, 312, 311, 310, 415, 308, 324, 318, 402, 317, 14, 87, 178, 88, 95};
@@ -254,6 +260,75 @@ void AddShadow(Builder& b, const LmFace& face, const int* lid, const int* browLo
     b.Strip(middle, opacity * 0.6f, top, 0.0f, look.shadow, false);
 }
 
+/// 沿上睫毛根画眼线（外眼角处加粗并带一个小眼尾）和一排睫毛
+void AddLinerAndLashes(Builder& b, const LmFace& face, const int* lid, const int* browLower, float linerOpacity,
+                       float lashOpacity, float faceWidth) {
+    if (linerOpacity <= 0.001f && lashOpacity <= 0.001f) {
+        return;
+    }
+    Vec2 browCenter{0.0f, 0.0f};
+    for (int i = 0; i < 5; ++i) {
+        browCenter.x += face.x[browLower[i]] / 5.0f;
+        browCenter.y += face.y[browLower[i]] / 5.0f;
+    }
+    Vec2 lidCenter{0.0f, 0.0f};
+    for (int i = 0; i < 9; ++i) {
+        lidCenter.x += face.x[lid[i]] / 9.0f;
+        lidCenter.y += face.y[lid[i]] / 9.0f;
+    }
+    const float upLen = std::max(Length(browCenter.x - lidCenter.x, browCenter.y - lidCenter.y), 1e-3f);
+    const Vec2 up{(browCenter.x - lidCenter.x) / upLen, (browCenter.y - lidCenter.y) / upLen};
+    const Vec2 inner = P(face, lid[0]);
+    const Vec2 outer = P(face, lid[8]);
+    const float eyeLen = std::max(Length(outer.x - inner.x, outer.y - inner.y), 1e-3f);
+    const Vec2 out{(outer.x - inner.x) / eyeLen, (outer.y - inner.y) / eyeLen};
+
+    if (linerOpacity > 0.001f) {
+        // 眼线：内眼角细，外眼角粗；睫毛根一侧最浓，上沿渐淡，边缘不生硬
+        std::vector<Vec2> base;
+        std::vector<Vec2> top;
+        for (int i = 0; i < 9; ++i) {
+            const Vec2 p = P(face, lid[i]);
+            const float t = static_cast<float>(i) / 8.0f;
+            const float width = faceWidth * (0.004f + 0.010f * t * t);
+            base.push_back(p);
+            top.push_back(Vec2{p.x + up.x * width, p.y + up.y * width});
+        }
+        b.Strip(base, linerOpacity, top, linerOpacity * 0.5f, kLinerColor, false);
+        // 眼尾：从外眼角向外上方挑出一小段
+        const Vec2 tipBase = top[8];
+        const Vec2 tip{outer.x + (out.x * 0.9f + up.x * 0.45f) * faceWidth * 0.045f,
+                       outer.y + (out.y * 0.9f + up.y * 0.45f) * faceWidth * 0.045f};
+        b.Tri(outer, linerOpacity, tipBase, linerOpacity * 0.5f, tip, 0.0f, kLinerColor);
+    }
+
+    if (lashOpacity > 0.001f) {
+        // 睫毛：从睫毛根向上、向外长出的细条，外侧更长更斜，根部浓、梢部淡
+        const int kLashes = 14;
+        const float thick = faceWidth * 0.0035f;
+        for (int k = 0; k < kLashes; ++k) {
+            const float t = (k + 0.5f) / kLashes;
+            // 在睫毛根折线上取点
+            const float pos = t * 8.0f;
+            const int i = std::min(static_cast<int>(pos), 7);
+            const float f = pos - i;
+            const Vec2 a = P(face, lid[i]);
+            const Vec2 c = P(face, lid[i + 1]);
+            const Vec2 root{a.x + (c.x - a.x) * f, a.y + (c.y - a.y) * f};
+            const float len = faceWidth * (0.022f + 0.028f * t);
+            const float lean = 0.15f + 0.75f * t * t;  // 越靠外越向外倒
+            Vec2 dir{up.x + out.x * lean, up.y + out.y * lean};
+            const float dl = std::max(Length(dir.x, dir.y), 1e-3f);
+            dir = Vec2{dir.x / dl, dir.y / dl};
+            const Vec2 side{-dir.y * thick, dir.x * thick};
+            const Vec2 tip{root.x + dir.x * len, root.y + dir.y * len};
+            const Vec2 r0{root.x - side.x, root.y - side.y};
+            const Vec2 r1{root.x + side.x, root.y + side.y};
+            b.Tri(r0, lashOpacity, r1, lashOpacity, tip, lashOpacity * 0.15f, kLashColor);
+        }
+    }
+}
+
 const MakeupLook* FindLook(const LmParams& params, float& intensity) {
     const int index = params.styleType - 1;
     intensity = std::min(std::max(params.makeupMakeupIntensity, 0.0f), 1.0f);
@@ -319,6 +394,11 @@ int LmBuildMakeup(const LmFace& face, const LmParams& params, std::vector<LmMake
     }
     AddShadow(b, face, kLidLeft, kBrowLowerLeft, look, intensity);
     AddShadow(b, face, kLidRight, kBrowLowerRight, look, intensity);
+    const int index = params.styleType - 1;
+    AddLinerAndLashes(b, face, kLidLeft, kBrowLowerLeft, kLinerOpacity[index] * intensity,
+                      kLashOpacity[index] * intensity, faceWidth);
+    AddLinerAndLashes(b, face, kLidRight, kBrowLowerRight, kLinerOpacity[index] * intensity,
+                      kLashOpacity[index] * intensity, faceWidth);
     AddBrow(b, face, kBrowUpperLeft, kBrowLowerLeft, look, intensity, faceWidth);
     AddBrow(b, face, kBrowUpperRight, kBrowLowerRight, look, intensity, faceWidth);
     AddLips(b, face, look, intensity, faceWidth);

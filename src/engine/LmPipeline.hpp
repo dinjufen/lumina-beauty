@@ -90,7 +90,7 @@ private:
     Target m_rgb;        ///< 原图 RGB，全分辨率
     Target m_halfA;      ///< 保边模糊中间结果，半分辨率
     Target m_halfB;      ///< 保边模糊结果，半分辨率
-    Target m_makeupA;    ///< 美妆图层，半分辨率，预乘 alpha
+    Target m_makeupA;    ///< 美妆图层，全分辨率，预乘 alpha
     Target m_makeupB;    ///< 美妆图层模糊的中间结果
     Target m_quarterA;   ///< 高斯模糊中间结果，四分之一分辨率
     Target m_quarterB;   ///< 高斯模糊结果，四分之一分辨率
