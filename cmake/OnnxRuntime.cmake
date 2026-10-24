@@ -6,8 +6,13 @@ if(NOT ONNXRUNTIME_ROOT)
         set(_ort_pkg "onnxruntime-win-x64-${ONNXRUNTIME_VERSION}")
         set(_ort_ext "zip")
     elseif(APPLE)
-        # 官方只发布 Apple 芯片（arm64）的 macOS 包
-        set(_ort_pkg "onnxruntime-osx-arm64-${ONNXRUNTIME_VERSION}")
+        # 新版本官方只发布 Apple 芯片（arm64）的 macOS 包；Intel（x86_64）包最后一版是 1.23.2，
+        # 给 Intel 版 OBS 构建插件时用 -DCMAKE_OSX_ARCHITECTURES=x86_64 -DONNXRUNTIME_VERSION=1.23.2
+        if(CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64")
+            set(_ort_pkg "onnxruntime-osx-x86_64-${ONNXRUNTIME_VERSION}")
+        else()
+            set(_ort_pkg "onnxruntime-osx-arm64-${ONNXRUNTIME_VERSION}")
+        endif()
         set(_ort_ext "tgz")
     else()
         message(FATAL_ERROR "Set ONNXRUNTIME_ROOT to an extracted ONNX Runtime release")

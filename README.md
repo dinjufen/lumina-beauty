@@ -62,6 +62,29 @@ filter callbacks on I420 / NV12 / YUY2 / UYVY test frames without opening OBS; r
 `data\obs-plugins\lumina-beauty\*` to `C:\ProgramData\obs-studio\plugins\lumina-beauty\data\`.
 In OBS, right-click a video capture source, choose **Filters**, add **Lumina Beauty**.
 
+### OBS plugin (macOS)
+
+The plugin's architecture must match OBS: the Apple silicon OBS needs an arm64 plugin, the Intel OBS
+(which also runs under Rosetta) needs x86_64. Check with `file /Applications/OBS.app/Contents/MacOS/OBS`.
+Use libobs headers from the same OBS version and link the libobs inside OBS.app:
+
+```
+git clone --depth 1 --branch 30.2.3 https://github.com/obsproject/obs-studio.git ../obs-studio
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DLUMINA_BUILD_OBS_PLUGIN=ON \
+  -DOBS_SOURCE_DIR=../obs-studio \
+  -DOBS_LIBRARY=/Applications/OBS.app/Contents/Frameworks/libobs.framework/libobs
+# Intel OBS: add -DCMAKE_OSX_ARCHITECTURES=x86_64 -DONNXRUNTIME_VERSION=1.23.2 (last ONNX Runtime with an x86_64 macOS build)
+cmake --build build -j
+```
+
+This produces `build/obs-plugin/lumina-beauty.plugin`. Copy it to
+`~/Library/Application Support/obs-studio/plugins/` and restart OBS. `build/bin/lumina-obs-test` runs the
+filter test against the libobs in OBS.app (`LUMINA_MODEL_DIR=models build/bin/lumina-obs-test`).
+
+If the compiler can't find `<string>` or other C++ headers, an old Command Line Tools install has left
+`/Library/Developer/CommandLineTools/usr/include/c++/v1` behind. Remove that folder, or add
+`-DCMAKE_CXX_FLAGS="-nostdinc++ -isystem $(xcrun --show-sdk-path)/usr/include/c++/v1"`.
+
 ## C API in brief
 
 ```c
@@ -76,7 +99,7 @@ Process calls of one engine must come from one thread. Parameters can be set fro
 
 ## Status and roadmap
 
-- Windows x64 and macOS (Apple silicon) build in CI. Linux (EGL) is planned; the OBS plugin is Windows-only for now.
+- Windows x64 and macOS (Apple silicon) build in CI. Linux (EGL) is planned. The OBS plugin builds on Windows and macOS.
 - Frames can be BT.601 or BT.709, full or limited range (`lumina_set_color_space`); the OBS filter
   picks this up from each frame automatically.
 - The OBS filter handles I420, NV12, YUY2 and UYVY frames; other formats pass through unchanged.
