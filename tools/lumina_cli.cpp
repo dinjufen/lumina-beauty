@@ -3,7 +3,7 @@
 // usage: lumina-cli <models dir> <width> <height> <in.i420> <out.i420> [name=value ...] [--repeat N]
 //   names: smooth whiten sharpen clarity eye slim narrow cheekbone jaw nose forehead shrink_head teeth pouch folds
 //          temperature tint saturation brightness contrast filter filter_intensity style style_color style_makeup
-//          background avatar headwear, plus background_image=<path>, matrix=601|709, full_range=0|1
+//          background avatar headwear, plus background_image=<path>, look=<look file>, matrix=601|709, full_range=0|1
 //   The input file may contain several frames back to back; each is processed in turn.
 //   --repeat N processes every frame N times (lets temporal smoothing settle) and reports the average time.
 #include <chrono>
@@ -74,6 +74,12 @@ int main(int argc, char** argv) {
         }
         if (key == "background_image") {
             lumina_set_background_image(engine, eq + 1);
+            continue;
+        }
+        if (key == "look") {
+            if (!lumina_set_look_file(engine, eq + 1)) {
+                return 1;
+            }
             continue;
         }
         bool found = false;

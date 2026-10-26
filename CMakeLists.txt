@@ -53,12 +53,14 @@ set_target_properties(lumina PROPERTIES
 # 运行目录里放好 onnxruntime 与模型，便于直接运行工具和调试
 add_custom_command(TARGET lumina POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ONNXRUNTIME_DLL} ${ONNXRUNTIME_EXTRA_LIBS} $<TARGET_FILE_DIR:lumina>
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/models $<TARGET_FILE_DIR:lumina>/models)
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/models $<TARGET_FILE_DIR:lumina>/models
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/looks $<TARGET_FILE_DIR:lumina>/looks)
 
 install(TARGETS lumina RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
 install(FILES include/lumina/lumina.h DESTINATION include/lumina)
 install(FILES ${ONNXRUNTIME_DLL} ${ONNXRUNTIME_EXTRA_LIBS} DESTINATION bin)
 install(DIRECTORY models/ DESTINATION models FILES_MATCHING PATTERN "*.onnx" PATTERN "*.txt" PATTERN "*.md")
+install(DIRECTORY looks/ DESTINATION looks)
 
 # ---------------------------------------------------------------- tools
 if(LUMINA_BUILD_TOOLS)
@@ -66,6 +68,11 @@ if(LUMINA_BUILD_TOOLS)
     target_link_libraries(lumina-cli PRIVATE lumina)
     set_target_properties(lumina-cli PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         BUILD_RPATH "@loader_path" INSTALL_RPATH "@loader_path")
+
+    # 素材工具：导出内置效果为素材文件、检查素材文件。只用到素材读写，直接编进引擎里的这几个源文件
+    add_executable(lumina-look tools/lumina_look.cpp src/engine/LmLook.cpp src/engine/LmJson.cpp)
+    target_include_directories(lumina-look PRIVATE src/engine include)
+    set_target_properties(lumina-look PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 endif()
 
 # ---------------------------------------------------------------- OBS plugin

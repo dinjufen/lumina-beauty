@@ -1,0 +1,26 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "深邃",
+  "color": {
+    "temperature": -0.013,
+    "tint": 0.043,
+    "saturation": -0.123,
+    "contrast": -0.055,
+    "brightness": 0.009,
+    "fade": 0.036,
+    "shadow_tint": [-0.002, -0.001, 0.012],
+    "highlight_tint": [0.003, 0.000, 0.007],
+    "skin": 0.000
+  },
+  "makeup": {
+    "lips": {"color": [0.740, 0.360, 0.360], "opacity": 0.650},
+    "blush": {"color": [0.920, 0.760, 0.720], "opacity": 0.300, "size": 0.150},
+    "brows": {"color": [0.500, 0.420, 0.380], "opacity": 0.550},
+    "eye_shadow": {"color": [0.680, 0.560, 0.520], "opacity": 0.600},
+    "contour": {"color": [0.820, 0.720, 0.660], "opacity": 0.500},
+    "eyeliner": {"color": [0.220, 0.180, 0.180], "opacity": 0.850},
+    "lashes": {"color": [0.120, 0.100, 0.100], "opacity": 0.800},
+    "foundation": 0.080
+  }
+}

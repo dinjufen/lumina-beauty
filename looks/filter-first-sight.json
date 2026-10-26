@@ -1,0 +1,16 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "初见",
+  "color": {
+    "temperature": -0.066,
+    "tint": -0.054,
+    "saturation": 0.031,
+    "contrast": -0.045,
+    "brightness": 0.400,
+    "fade": -0.107,
+    "shadow_tint": [0.008, 0.003, -0.014],
+    "highlight_tint": [0.018, -0.025, 0.017],
+    "skin": 0.107
+  }
+}

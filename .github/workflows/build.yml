@@ -40,6 +40,10 @@ jobs:
           python tests/make_test_frame.py frame.i420 640 480
           "$bin/lumina-cli" "$bin/models" 640 480 frame.i420 out.i420 smooth=1 whiten=1 filter=3 filter_intensity=1 --repeat 3
           python tests/check_changed.py frame.i420 out.i420
+          # 素材文件：内置效果导出的素材读回应与内置完全一致，且能通过命令行加载生效
+          "$bin/lumina-look" verify looks
+          "$bin/lumina-cli" "$bin/models" 640 480 frame.i420 look.i420 look=looks/style-korean.json style_color=1
+          python tests/check_changed.py frame.i420 look.i420
 
   # macOS OBS 插件：和 macOS 核心构建一样只在发版或手动触发时跑，产出可直接安装的 lumina-beauty.plugin
   obs-plugin-macos:

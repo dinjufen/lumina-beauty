@@ -26,7 +26,9 @@ src/engine/               引擎（渲染管线、着色器、人脸跟踪、人
 src/platform/win/         Windows 平台相关（WGL 上下文、WIC 图片解码）
 src/platform/mac/         macOS 平台相关（CGL 上下文、ImageIO 图片解码）
 models/                   转换成 ONNX 的 MediaPipe 模型（Apache 2.0，见 models/NOTICE.md）
+looks/                    素材文件：内置滤镜和风格妆的 JSON 版本，格式见 looks/README.md
 tools/lumina_cli.cpp      命令行工具，处理原始 I420 帧
+tools/lumina_look.cpp     素材工具：导出内置效果、检查素材文件
 plugins/obs/              OBS Studio 滤镜插件（GPL-2.0-or-later）
 ```
 
@@ -81,6 +83,16 @@ cmake --build build -j
 如果编译时提示找不到 `<string>` 等 C++ 头文件，是旧版 Command Line Tools 残留了
 `/Library/Developer/CommandLineTools/usr/include/c++/v1`。删掉这个目录，或者在配置时加上
 `-DCMAKE_CXX_FLAGS="-nostdinc++ -isystem $(xcrun --show-sdk-path)/usr/include/c++/v1"`。
+
+## 素材文件
+
+滤镜和风格妆可以写成 JSON 素材文件加载，不改代码就能加新妆容：调色参数，以及口红、腮红、眉毛、眼影、修容、
+眼线、睫毛的颜色和浓度。`looks/` 目录里是 26 款内置效果导出的素材，可以直接复制来改。格式说明见
+[looks/README.md](looks/README.md)。
+
+- OBS：滤镜属性「调色」组里的「素材文件」
+- SDK：`lumina_set_look_file(engine, path)` / `lumina_set_look_json(engine, json)`
+- 检查素材：`lumina-look check my-look.json`
 
 ## C API 简介
 

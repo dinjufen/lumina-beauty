@@ -1,0 +1,16 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "冷白",
+  "color": {
+    "temperature": -0.066,
+    "tint": 0.016,
+    "saturation": 0.010,
+    "contrast": 0.032,
+    "brightness": 0.019,
+    "fade": -0.025,
+    "shadow_tint": [-0.010, 0.003, 0.002],
+    "highlight_tint": [-0.016, -0.017, 0.009],
+    "skin": 0.126
+  }
+}

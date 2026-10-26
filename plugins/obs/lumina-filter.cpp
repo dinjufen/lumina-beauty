@@ -57,6 +57,7 @@ struct Filter {
     obs_source_t* source = nullptr;
     lumina_engine* engine = nullptr;
     std::string backgroundPath;
+    std::string lookPath;
     bool warnedFormat = false;
     // YUY2 等打包格式转成 I420 处理
     std::vector<uint8_t> planar;
@@ -114,6 +115,14 @@ void Update(void* data, obs_data_t* settings) {
         f->backgroundPath = newPath;
         lumina_set_background_image(f->engine, newPath.c_str());
     }
+
+    // 素材文件代替上面选的风格妆；清空后回到内置风格。读不出来时日志里有原因，保留之前的效果
+    const char* look = obs_data_get_string(settings, "look_file");
+    const std::string newLook = look ? look : "";
+    if (newLook != f->lookPath) {
+        f->lookPath = newLook;
+        lumina_set_look_file(f->engine, newLook.c_str());
+    }
 }
 
 void* Create(obs_data_t* settings, obs_source_t* source) {
@@ -168,6 +177,10 @@ obs_properties_t* Properties(void*) {
     AddList(color, "style", kStyleNames, sizeof(kStyleNames) / sizeof(kStyleNames[0]));
     obs_properties_add_int_slider(color, "style_color", obs_module_text("style_color"), 0, 100, 1);
     obs_properties_add_int_slider(color, "style_makeup", obs_module_text("style_makeup"), 0, 100, 1);
+    char* looks = obs_module_file("looks");
+    obs_properties_add_path(color, "look_file", obs_module_text("look_file"), OBS_PATH_FILE,
+                            "Lumina looks (*.json)", looks);
+    bfree(looks);
     AddSliders(color, kQuality, sizeof(kQuality) / sizeof(kQuality[0]));
     obs_properties_add_group(props, "group_color", obs_module_text("Group.Color"), OBS_GROUP_NORMAL, color);
 

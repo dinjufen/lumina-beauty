@@ -28,7 +28,9 @@ src/engine/               engine (pipeline, shaders, face tracking, segmentation
 src/platform/win/         Windows specifics (WGL context, WIC image decoding)
 src/platform/mac/         macOS specifics (CGL context, ImageIO image decoding)
 models/                   MediaPipe models converted to ONNX (Apache 2.0, see models/NOTICE.md)
+looks/                    look files: the built-in filters and styles as JSON, format in looks/README.md
 tools/lumina_cli.cpp      process raw I420 frames from the command line
+tools/lumina_look.cpp     look tool: export the built-ins, check look files
 plugins/obs/              OBS Studio filter plugin (GPL-2.0-or-later)
 ```
 
@@ -85,6 +87,17 @@ builds (pushing a `v*` tag) also package `lumina-beauty-macos-arm64.zip` in CI.
 If the compiler can't find `<string>` or other C++ headers, an old Command Line Tools install has left
 `/Library/Developer/CommandLineTools/usr/include/c++/v1` behind. Remove that folder, or add
 `-DCMAKE_CXX_FLAGS="-nostdinc++ -isystem $(xcrun --show-sdk-path)/usr/include/c++/v1"`.
+
+## Look files
+
+Filters and style looks can be loaded from JSON look files, so new looks need no code changes: the color grade
+plus color and strength for lips, blush, brows, eye shadow, contour, eyeliner and lashes. `looks/` holds the 26
+built-in effects exported as look files, ready to copy and edit. The format is described (in Chinese) in
+[looks/README.md](looks/README.md).
+
+- OBS: **Look file** in the filter's color group
+- SDK: `lumina_set_look_file(engine, path)` / `lumina_set_look_json(engine, json)`
+- Check a file: `lumina-look check my-look.json`
 
 ## C API in brief
 

@@ -1,0 +1,16 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "自然",
+  "color": {
+    "temperature": -0.063,
+    "tint": -0.016,
+    "saturation": 0.038,
+    "contrast": 0.095,
+    "brightness": 0.157,
+    "fade": -0.014,
+    "shadow_tint": [-0.003, 0.005, -0.009],
+    "highlight_tint": [0.002, -0.014, 0.010],
+    "skin": 0.050
+  }
+}

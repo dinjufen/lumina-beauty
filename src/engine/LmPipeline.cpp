@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include "LmGL.hpp"
+#include "LmLook.hpp"
 #include "LmTuning.hpp"
 #include "LmLog.hpp"
 #include <chrono>
@@ -1111,14 +1112,15 @@ bool LmPipeline::Render(int w, int h, const uint8_t* in, uint8_t* out, const LmP
     SetGrade(m_progCompose, 0, quality, 1.0f, hasQuality ? 1.0f : 0.0f);
 
     // 第 1 组：滤镜；第 2 组：风格妆的色彩。两者可以叠加
-    LmColorGrade filter;
-    const bool hasFilter = LmGetFilterGrade(params.filterType, filter);
-    SetGrade(m_progCompose, 1, filter, tuning.presetGain, hasFilter ? params.filterIntensity : 0.0f);
+    const LmLook* filter = LmBuiltinFilter(params.filterType);
+    const bool hasFilter = filter && filter->hasGrade;
+    SetGrade(m_progCompose, 1, hasFilter ? filter->grade : LmColorGrade(), tuning.presetGain,
+             hasFilter ? params.filterIntensity : 0.0f);
 
-    LmColorGrade styleGrade;
-    const bool hasStyleGrade =
-        LmGetStyleGrade(params.styleType, styleGrade);
-    SetGrade(m_progCompose, 2, styleGrade, tuning.presetGain, hasStyleGrade ? params.makeupFilterIntensity : 0.0f);
+    const LmLook* style = LmActiveStyle(params);
+    const bool hasStyleGrade = style && style->hasGrade;
+    SetGrade(m_progCompose, 2, hasStyleGrade ? style->grade : LmColorGrade(), tuning.presetGain,
+             hasStyleGrade ? params.makeupFilterIntensity : 0.0f);
     DrawTo(m_final);
 
     // 5. 美型变形：只作用在人像上。反向映射，对每个网格顶点依次套用各个变形操作，得到它应当采样的位置。

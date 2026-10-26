@@ -1,0 +1,26 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "甜美",
+  "color": {
+    "temperature": 0.040,
+    "tint": 0.120,
+    "saturation": 0.060,
+    "contrast": -0.060,
+    "brightness": 0.080,
+    "fade": 0.050,
+    "shadow_tint": [0.030, 0.000, 0.020],
+    "highlight_tint": [0.040, 0.010, 0.020],
+    "skin": 0.000
+  },
+  "makeup": {
+    "lips": {"color": [1.000, 0.520, 0.620], "opacity": 0.650},
+    "blush": {"color": [1.000, 0.760, 0.820], "opacity": 0.550, "size": 0.180},
+    "brows": {"color": [0.720, 0.620, 0.560], "opacity": 0.300},
+    "eye_shadow": {"color": [1.000, 0.800, 0.840], "opacity": 0.350},
+    "contour": {"color": [1.000, 1.000, 1.000], "opacity": 0.000},
+    "eyeliner": {"color": [0.220, 0.180, 0.180], "opacity": 0.450},
+    "lashes": {"color": [0.120, 0.100, 0.100], "opacity": 0.700},
+    "foundation": 0.200
+  }
+}

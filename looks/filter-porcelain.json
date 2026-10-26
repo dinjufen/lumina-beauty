@@ -1,0 +1,16 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "粉瓷",
+  "color": {
+    "temperature": -0.024,
+    "tint": 0.050,
+    "saturation": -0.036,
+    "contrast": 0.018,
+    "brightness": 0.070,
+    "fade": 0.005,
+    "shadow_tint": [0.000, -0.005, 0.000],
+    "highlight_tint": [0.008, -0.007, 0.007],
+    "skin": 0.057
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "胶片",
+  "color": {
+    "temperature": 0.060,
+    "tint": -0.040,
+    "saturation": -0.160,
+    "contrast": 0.140,
+    "brightness": -0.020,
+    "fade": 0.120,
+    "shadow_tint": [0.000, 0.030, 0.040],
+    "highlight_tint": [0.040, 0.030, 0.000],
+    "skin": 0.000
+  }
+}

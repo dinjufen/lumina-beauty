@@ -1,0 +1,26 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "学妹",
+  "color": {
+    "temperature": -0.018,
+    "tint": 0.010,
+    "saturation": -0.020,
+    "contrast": 0.008,
+    "brightness": 0.078,
+    "fade": 0.021,
+    "shadow_tint": [-0.001, -0.001, 0.002],
+    "highlight_tint": [0.002, 0.001, 0.003],
+    "skin": 0.000
+  },
+  "makeup": {
+    "lips": {"color": [1.000, 0.580, 0.620], "opacity": 0.550},
+    "blush": {"color": [1.000, 0.800, 0.820], "opacity": 0.500, "size": 0.180},
+    "brows": {"color": [0.740, 0.640, 0.580], "opacity": 0.300},
+    "eye_shadow": {"color": [1.000, 0.860, 0.820], "opacity": 0.300},
+    "contour": {"color": [1.000, 1.000, 1.000], "opacity": 0.000},
+    "eyeliner": {"color": [0.220, 0.180, 0.180], "opacity": 0.400},
+    "lashes": {"color": [0.120, 0.100, 0.100], "opacity": 0.650},
+    "foundation": 0.200
+  }
+}

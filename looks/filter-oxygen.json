@@ -1,0 +1,16 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "氧气",
+  "color": {
+    "temperature": -0.118,
+    "tint": -0.096,
+    "saturation": -0.100,
+    "contrast": 0.095,
+    "brightness": 0.357,
+    "fade": 0.041,
+    "shadow_tint": [-0.008, 0.019, -0.007],
+    "highlight_tint": [-0.003, -0.008, 0.025],
+    "skin": 0.082
+  }
+}

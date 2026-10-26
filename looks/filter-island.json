@@ -1,0 +1,16 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "海岛",
+  "color": {
+    "temperature": -0.054,
+    "tint": -0.038,
+    "saturation": 0.192,
+    "contrast": 0.032,
+    "brightness": 0.310,
+    "fade": -0.032,
+    "shadow_tint": [0.000, -0.001, -0.007],
+    "highlight_tint": [-0.013, -0.009, 0.011],
+    "skin": 0.048
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "白皙",
+  "color": {
+    "temperature": -0.063,
+    "tint": 0.110,
+    "saturation": -0.363,
+    "contrast": -0.004,
+    "brightness": 0.320,
+    "fade": 0.140,
+    "shadow_tint": [-0.018, -0.008, 0.006],
+    "highlight_tint": [0.042, -0.002, 0.012],
+    "skin": 0.000
+  },
+  "makeup": {
+    "lips": {"color": [0.950, 0.620, 0.660], "opacity": 0.550},
+    "blush": {"color": [1.000, 0.840, 0.860], "opacity": 0.400, "size": 0.170},
+    "brows": {"color": [0.720, 0.620, 0.560], "opacity": 0.300},
+    "eye_shadow": {"color": [0.960, 0.840, 0.820], "opacity": 0.300},
+    "contour": {"color": [1.000, 1.000, 1.000], "opacity": 0.000},
+    "eyeliner": {"color": [0.220, 0.180, 0.180], "opacity": 0.500},
+    "lashes": {"color": [0.120, 0.100, 0.100], "opacity": 0.500},
+    "foundation": 0.250
+  }
+}

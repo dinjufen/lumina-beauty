@@ -1,0 +1,26 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "优雅",
+  "color": {
+    "temperature": 0.000,
+    "tint": 0.040,
+    "saturation": -0.100,
+    "contrast": 0.040,
+    "brightness": 0.040,
+    "fade": 0.060,
+    "shadow_tint": [0.010, 0.000, 0.020],
+    "highlight_tint": [0.020, 0.020, 0.020],
+    "skin": 0.000
+  },
+  "makeup": {
+    "lips": {"color": [0.860, 0.420, 0.480], "opacity": 0.600},
+    "blush": {"color": [0.980, 0.800, 0.820], "opacity": 0.350, "size": 0.160},
+    "brows": {"color": [0.620, 0.540, 0.500], "opacity": 0.400},
+    "eye_shadow": {"color": [0.880, 0.760, 0.760], "opacity": 0.400},
+    "contour": {"color": [0.900, 0.820, 0.780], "opacity": 0.250},
+    "eyeliner": {"color": [0.220, 0.180, 0.180], "opacity": 0.650},
+    "lashes": {"color": [0.120, 0.100, 0.100], "opacity": 0.600},
+    "foundation": 0.120
+  }
+}

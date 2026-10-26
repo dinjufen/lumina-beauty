@@ -1,7 +1,10 @@
 #ifndef LUMINA_PARAMS_HPP
 #define LUMINA_PARAMS_HPP
 
+#include <memory>
 #include <string>
+
+struct LmLook;
 
 /**
  * @brief 调色预设，滤镜与风格妆的色彩部分都用它描述
@@ -13,7 +16,7 @@ struct LmColorGrade {
     float saturation = 0.0f;   ///< 饱和度 [-1, 1]
     float contrast = 0.0f;     ///< 对比度 [-1, 1]
     float brightness = 0.0f;   ///< 亮度 [-1, 1]
-    float fade = 0.0f;         ///< 褪色（抬高暗部）[0, 1]
+    float fade = 0.0f;         ///< 褪色（抬高暗部）[-1, 1]，负值反而压暗暗部
     float shadowTint[3] = {0.0f, 0.0f, 0.0f};     ///< 暗部染色
     float highlightTint[3] = {0.0f, 0.0f, 0.0f};  ///< 亮部染色
     float skin = 0.0f;         ///< 皮肤额外提亮，人像类滤镜让脸比环境更亮
@@ -58,6 +61,8 @@ struct LmParams {
     int styleType = 0;
     float makeupFilterIntensity = 0.0f;
     float makeupMakeupIntensity = 0.0f;
+    /// 从素材文件加载的风格，设置后代替 styleType 指定的内置风格；强度仍由上面两个滑杆控制
+    std::shared_ptr<const LmLook> look;
 
     // 卡通头像与头饰，取 LmAvatarKind / LmHeadwearKind，0 为不使用
     int avatar = 0;
@@ -78,11 +83,7 @@ enum LmBackground {
     LM_BG_PICTURE = 2,
 };
 
-/**
- * @brief 取滤镜、风格妆色彩部分的调色预设
- * @return 未定义的序号返回 false
- */
-bool LmGetFilterGrade(int filter, LmColorGrade& grade);
-bool LmGetStyleGrade(int style, LmColorGrade& grade);
+/// 当前生效的风格：素材文件优先，否则是 styleType 对应的内置风格，都没有时返回 nullptr
+const LmLook* LmActiveStyle(const LmParams& params);
 
 #endif // LUMINA_PARAMS_HPP

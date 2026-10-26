@@ -1,0 +1,16 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "焕肤",
+  "color": {
+    "temperature": -0.048,
+    "tint": -0.001,
+    "saturation": 0.029,
+    "contrast": 0.055,
+    "brightness": 0.179,
+    "fade": -0.004,
+    "shadow_tint": [0.000, -0.003, -0.004],
+    "highlight_tint": [0.003, -0.009, 0.005],
+    "skin": 0.083
+  }
+}

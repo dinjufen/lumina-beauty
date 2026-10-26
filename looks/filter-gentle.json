@@ -1,0 +1,16 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "温柔",
+  "color": {
+    "temperature": -0.046,
+    "tint": -0.019,
+    "saturation": 0.022,
+    "contrast": -0.029,
+    "brightness": 0.321,
+    "fade": 0.021,
+    "shadow_tint": [-0.003, -0.011, 0.006],
+    "highlight_tint": [-0.012, -0.019, 0.009],
+    "skin": 0.046
+  }
+}

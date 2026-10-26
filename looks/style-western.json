@@ -1,0 +1,26 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "欧美",
+  "color": {
+    "temperature": -0.008,
+    "tint": -0.008,
+    "saturation": -0.060,
+    "contrast": -0.005,
+    "brightness": 0.121,
+    "fade": 0.012,
+    "shadow_tint": [0.002, -0.002, 0.003],
+    "highlight_tint": [0.009, 0.002, 0.002],
+    "skin": 0.000
+  },
+  "makeup": {
+    "lips": {"color": [0.800, 0.360, 0.360], "opacity": 0.700},
+    "blush": {"color": [0.960, 0.760, 0.700], "opacity": 0.350, "size": 0.160},
+    "brows": {"color": [0.560, 0.460, 0.400], "opacity": 0.500},
+    "eye_shadow": {"color": [0.760, 0.620, 0.560], "opacity": 0.550},
+    "contour": {"color": [0.860, 0.760, 0.700], "opacity": 0.450},
+    "eyeliner": {"color": [0.220, 0.180, 0.180], "opacity": 0.800},
+    "lashes": {"color": [0.120, 0.100, 0.100], "opacity": 0.800},
+    "foundation": 0.080
+  }
+}

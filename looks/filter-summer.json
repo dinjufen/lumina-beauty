@@ -1,0 +1,16 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "浅夏",
+  "color": {
+    "temperature": -0.028,
+    "tint": -0.045,
+    "saturation": 0.276,
+    "contrast": 0.039,
+    "brightness": 0.228,
+    "fade": -0.029,
+    "shadow_tint": [0.006, -0.001, 0.005],
+    "highlight_tint": [-0.026, -0.008, 0.010],
+    "skin": 0.137
+  }
+}

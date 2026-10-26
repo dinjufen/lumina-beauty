@@ -146,6 +146,17 @@ LUMINA_API int lumina_set_background_image(lumina_engine* engine, const char* pa
 LUMINA_API int lumina_set_background_rgba(lumina_engine* engine, const uint8_t* rgba, int width, int height);
 
 /**
+ * Use a look file (a style: color grade and/or makeup, see looks/README.md) instead of the built-in style
+ * chosen with LUMINA_STYLE. LUMINA_STYLE_COLOR and LUMINA_STYLE_MAKEUP still control how strongly it applies.
+ * Pass NULL or "" to go back to the built-in style.
+ * @return 1 on success (or when cleared); 0 when the file cannot be read or parsed, the reason is logged and
+ *         the previous look stays active.
+ */
+LUMINA_API int lumina_set_look_file(lumina_engine* engine, const char* path_utf8);
+/** Same as lumina_set_look_file with the JSON text itself, for apps that ship looks in their own resources. */
+LUMINA_API int lumina_set_look_json(lumina_engine* engine, const char* json_utf8);
+
+/**
  * Process one I420 frame (Y plane, then U and V at half resolution, tightly packed).
  * Width and height must be even. in and out may point to the same buffer.
  * Call all process functions of one engine from the same thread.

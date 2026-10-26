@@ -1,0 +1,16 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "高级灰",
+  "color": {
+    "temperature": -0.040,
+    "tint": 0.000,
+    "saturation": -0.300,
+    "contrast": 0.080,
+    "brightness": 0.000,
+    "fade": 0.100,
+    "shadow_tint": [0.010, 0.010, 0.020],
+    "highlight_tint": [0.010, 0.010, 0.010],
+    "skin": 0.000
+  }
+}

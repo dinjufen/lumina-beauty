@@ -1,0 +1,26 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "元气",
+  "color": {
+    "temperature": -0.047,
+    "tint": -0.016,
+    "saturation": -0.232,
+    "contrast": 0.103,
+    "brightness": 0.316,
+    "fade": 0.012,
+    "shadow_tint": [-0.005, -0.017, 0.011],
+    "highlight_tint": [0.017, -0.008, 0.005],
+    "skin": 0.000
+  },
+  "makeup": {
+    "lips": {"color": [1.000, 0.460, 0.500], "opacity": 0.650},
+    "blush": {"color": [1.000, 0.760, 0.760], "opacity": 0.550, "size": 0.200},
+    "brows": {"color": [0.720, 0.620, 0.560], "opacity": 0.300},
+    "eye_shadow": {"color": [1.000, 0.840, 0.780], "opacity": 0.300},
+    "contour": {"color": [1.000, 1.000, 1.000], "opacity": 0.000},
+    "eyeliner": {"color": [0.220, 0.180, 0.180], "opacity": 0.400},
+    "lashes": {"color": [0.120, 0.100, 0.100], "opacity": 0.600},
+    "foundation": 0.300
+  }
+}

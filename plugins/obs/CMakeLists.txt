@@ -47,6 +47,7 @@ if(APPLE)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ONNXRUNTIME_DLL} ${ONNXRUNTIME_EXTRA_LIBS} ${_bundle}/Frameworks/
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/data ${_bundle}/Resources
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/models ${_bundle}/Resources/models
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/looks ${_bundle}/Resources/looks
         # 本机构建只做 ad-hoc 签名；OBS 关闭了库校验，能直接加载
         COMMAND codesign --force --sign - --deep ${_pkg}/lumina-beauty.plugin)
 else()
@@ -60,12 +61,14 @@ else()
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:lumina-beauty> ${_pkg}/obs-plugins/64bit/
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ONNXRUNTIME_DLL} ${_pkg}/obs-plugins/64bit/
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/data ${_pkg}/data/obs-plugins/lumina-beauty
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/models ${_pkg}/data/obs-plugins/lumina-beauty/models)
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/models ${_pkg}/data/obs-plugins/lumina-beauty/models
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/looks ${_pkg}/data/obs-plugins/lumina-beauty/looks)
 endif()
 
 # 插件逻辑测试：把插件源码编进测试程序，直接调用滤镜回调。在 OBS 的 bin 目录下运行（需要 obs.dll）
 add_executable(lumina-obs-test tests/filter_test.cpp)
 target_include_directories(lumina-obs-test PRIVATE ${_obs_includes})
+target_compile_definitions(lumina-obs-test PRIVATE LUMINA_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
 target_link_libraries(lumina-obs-test PRIVATE lumina_static onnxruntime_imported ${OBS_LIBRARY})
 add_custom_command(TARGET lumina-obs-test POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ONNXRUNTIME_DLL} ${ONNXRUNTIME_EXTRA_LIBS} $<TARGET_FILE_DIR:lumina-obs-test>)

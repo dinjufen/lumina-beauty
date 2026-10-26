@@ -1,0 +1,16 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "桔梗",
+  "color": {
+    "temperature": -0.080,
+    "tint": 0.080,
+    "saturation": -0.080,
+    "contrast": 0.020,
+    "brightness": 0.040,
+    "fade": 0.080,
+    "shadow_tint": [0.020, 0.000, 0.040],
+    "highlight_tint": [0.020, 0.010, 0.040],
+    "skin": 0.000
+  }
+}

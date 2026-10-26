@@ -1,0 +1,16 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "暖阳",
+  "color": {
+    "temperature": 0.118,
+    "tint": 0.009,
+    "saturation": 0.002,
+    "contrast": 0.090,
+    "brightness": 0.149,
+    "fade": 0.014,
+    "shadow_tint": [-0.011, -0.003, -0.006],
+    "highlight_tint": [0.007, 0.002, -0.015],
+    "skin": 0.042
+  }
+}

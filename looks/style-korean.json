@@ -1,0 +1,26 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "韩系",
+  "color": {
+    "temperature": -0.008,
+    "tint": -0.008,
+    "saturation": -0.085,
+    "contrast": 0.027,
+    "brightness": 0.192,
+    "fade": 0.005,
+    "shadow_tint": [0.004, -0.006, 0.010],
+    "highlight_tint": [0.007, -0.006, 0.009],
+    "skin": 0.000
+  },
+  "makeup": {
+    "lips": {"color": [1.000, 0.560, 0.520], "opacity": 0.600},
+    "blush": {"color": [1.000, 0.800, 0.780], "opacity": 0.500, "size": 0.170},
+    "brows": {"color": [0.720, 0.620, 0.550], "opacity": 0.350},
+    "eye_shadow": {"color": [0.980, 0.800, 0.740], "opacity": 0.350},
+    "contour": {"color": [1.000, 1.000, 1.000], "opacity": 0.000},
+    "eyeliner": {"color": [0.220, 0.180, 0.180], "opacity": 0.450},
+    "lashes": {"color": [0.120, 0.100, 0.100], "opacity": 0.550},
+    "foundation": 0.250
+  }
+}

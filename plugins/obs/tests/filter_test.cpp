@@ -114,6 +114,19 @@ int main() {
 
     Destroy(filter);
     obs_data_release(settings);
+
+    // 只用素材文件（不选内置风格）也应生效
+    printf("  look file:\n");
+    obs_data_t* lookSettings = obs_data_create();
+    Defaults(lookSettings);
+    obs_data_set_int(lookSettings, "smooth", 0);
+    obs_data_set_int(lookSettings, "whiten", 0);
+    obs_data_set_int(lookSettings, "style_color", 100);
+    obs_data_set_string(lookSettings, "look_file", LUMINA_SOURCE_DIR "/looks/style-fair.json");
+    void* lookFilter = Create(lookSettings, nullptr);
+    ok = RunFormat(lookFilter, VIDEO_FORMAT_I420, VIDEO_CS_601, VIDEO_RANGE_FULL) && ok;
+    Destroy(lookFilter);
+    obs_data_release(lookSettings);
     obs_shutdown();
     printf(ok ? "PASS\n" : "FAIL\n");
     return ok ? 0 : 1;

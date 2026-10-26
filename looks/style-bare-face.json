@@ -1,0 +1,26 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "伪素颜",
+  "color": {
+    "temperature": -0.010,
+    "tint": 0.002,
+    "saturation": -0.031,
+    "contrast": 0.064,
+    "brightness": 0.175,
+    "fade": -0.003,
+    "shadow_tint": [-0.001, 0.001, -0.001],
+    "highlight_tint": [0.002, 0.001, 0.001],
+    "skin": 0.000
+  },
+  "makeup": {
+    "lips": {"color": [0.980, 0.700, 0.680], "opacity": 0.400},
+    "blush": {"color": [1.000, 0.860, 0.860], "opacity": 0.300, "size": 0.160},
+    "brows": {"color": [0.760, 0.660, 0.600], "opacity": 0.250},
+    "eye_shadow": {"color": [1.000, 1.000, 1.000], "opacity": 0.000},
+    "contour": {"color": [1.000, 1.000, 1.000], "opacity": 0.000},
+    "eyeliner": {"color": [0.220, 0.180, 0.180], "opacity": 0.150},
+    "lashes": {"color": [0.120, 0.100, 0.100], "opacity": 0.300},
+    "foundation": 0.180
+  }
+}

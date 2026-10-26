@@ -2,72 +2,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include "LmLook.hpp"
 
 namespace {
-
-/**
- * @brief 一个风格的妆容
- * @remark 颜色是正片叠底色，1 为不变，越小该通道压得越暗；opacity 是滑杆拉满时的浓度。
- *         这些妆容按风格名称自行设计，不来自任何第三方素材，可按设计稿直接调整。
- */
-struct MakeupLook {
-    float lip[3];
-    float lipOpacity;
-    float blush[3];
-    float blushOpacity;
-    float blushSize;     ///< 腮红半径，相对脸宽
-    float brow[3];
-    float browOpacity;
-    float shadow[3];
-    float shadowOpacity;
-    float contour[3];
-    float contourOpacity;
-    float foundation;    ///< 粉底提亮量，只作用于脸部皮肤
-};
-
-// 顺序与 lumina_style 一致（从 1 开始）
-const MakeupLook kLooks[] = {
-    // 白皙：浅豆沙唇，淡粉腮红，妆感轻
-    {{0.95f, 0.62f, 0.66f}, 0.55f, {1.00f, 0.84f, 0.86f}, 0.40f, 0.17f, {0.72f, 0.62f, 0.56f}, 0.30f,
-     {0.96f, 0.84f, 0.82f}, 0.30f, {1.0f, 1.0f, 1.0f}, 0.0f, 0.25f},
-    // 韩系：珊瑚唇，蜜桃腮红，浅棕眉
-    {{1.00f, 0.56f, 0.52f}, 0.60f, {1.00f, 0.80f, 0.78f}, 0.50f, 0.17f, {0.72f, 0.62f, 0.55f}, 0.35f,
-     {0.98f, 0.80f, 0.74f}, 0.35f, {1.0f, 1.0f, 1.0f}, 0.0f, 0.25f},
-    // 元气：亮红唇，大面积腮红
-    {{1.00f, 0.46f, 0.50f}, 0.65f, {1.00f, 0.76f, 0.76f}, 0.55f, 0.20f, {0.72f, 0.62f, 0.56f}, 0.30f,
-     {1.00f, 0.84f, 0.78f}, 0.30f, {1.0f, 1.0f, 1.0f}, 0.0f, 0.30f},
-    // 温暖：橘棕唇，暖杏色腮红与眼影
-    {{0.95f, 0.56f, 0.44f}, 0.60f, {1.00f, 0.80f, 0.70f}, 0.45f, 0.17f, {0.66f, 0.54f, 0.44f}, 0.40f,
-     {0.94f, 0.78f, 0.66f}, 0.40f, {1.0f, 1.0f, 1.0f}, 0.0f, 0.15f},
-    // 欧美：深红唇，大地色眼影，修容
-    {{0.80f, 0.36f, 0.36f}, 0.70f, {0.96f, 0.76f, 0.70f}, 0.35f, 0.16f, {0.56f, 0.46f, 0.40f}, 0.50f,
-     {0.76f, 0.62f, 0.56f}, 0.55f, {0.86f, 0.76f, 0.70f}, 0.45f, 0.08f},
-    // 优雅：玫瑰唇，轻修容
-    {{0.86f, 0.42f, 0.48f}, 0.60f, {0.98f, 0.80f, 0.82f}, 0.35f, 0.16f, {0.62f, 0.54f, 0.50f}, 0.40f,
-     {0.88f, 0.76f, 0.76f}, 0.40f, {0.90f, 0.82f, 0.78f}, 0.25f, 0.12f},
-    // 甜美：粉唇，粉色腮红
-    {{1.00f, 0.52f, 0.62f}, 0.65f, {1.00f, 0.76f, 0.82f}, 0.55f, 0.18f, {0.72f, 0.62f, 0.56f}, 0.30f,
-     {1.00f, 0.80f, 0.84f}, 0.35f, {1.0f, 1.0f, 1.0f}, 0.0f, 0.20f},
-    // 深邃：暗红唇，深色眼影与修容，眉色加深
-    {{0.74f, 0.36f, 0.36f}, 0.65f, {0.92f, 0.76f, 0.72f}, 0.30f, 0.15f, {0.50f, 0.42f, 0.38f}, 0.55f,
-     {0.68f, 0.56f, 0.52f}, 0.60f, {0.82f, 0.72f, 0.66f}, 0.50f, 0.08f},
-    // 伪素颜：接近唇色的淡唇，极淡腮红，不画眼影
-    {{0.98f, 0.70f, 0.68f}, 0.40f, {1.00f, 0.86f, 0.86f}, 0.30f, 0.16f, {0.76f, 0.66f, 0.60f}, 0.25f,
-     {1.0f, 1.0f, 1.0f}, 0.0f, {1.0f, 1.0f, 1.0f}, 0.0f, 0.18f},
-    // 学姐：干枯玫瑰唇，大地色眼影，轻修容
-    {{0.88f, 0.46f, 0.46f}, 0.60f, {0.98f, 0.80f, 0.80f}, 0.35f, 0.16f, {0.60f, 0.52f, 0.48f}, 0.45f,
-     {0.86f, 0.72f, 0.68f}, 0.45f, {0.88f, 0.80f, 0.76f}, 0.30f, 0.15f},
-    // 学妹：水粉唇，粉嫩腮红
-    {{1.00f, 0.58f, 0.62f}, 0.55f, {1.00f, 0.80f, 0.82f}, 0.50f, 0.18f, {0.74f, 0.64f, 0.58f}, 0.30f,
-     {1.00f, 0.86f, 0.82f}, 0.30f, {1.0f, 1.0f, 1.0f}, 0.0f, 0.20f},
-};
-const int kLookCount = sizeof(kLooks) / sizeof(kLooks[0]);
-
-// 眼线与睫毛的浓度，顺序同 kLooks：白皙、韩系、元气、温暖、欧美、优雅、甜美、深邃、伪素颜、学姐、学妹
-const float kLinerOpacity[] = {0.50f, 0.45f, 0.40f, 0.50f, 0.80f, 0.65f, 0.45f, 0.85f, 0.15f, 0.60f, 0.40f};
-const float kLashOpacity[] = {0.50f, 0.55f, 0.60f, 0.50f, 0.80f, 0.60f, 0.70f, 0.80f, 0.30f, 0.60f, 0.65f};
-const float kLinerColor[3] = {0.22f, 0.18f, 0.18f};
-const float kLashColor[3] = {0.12f, 0.10f, 0.10f};
 
 // MediaPipe Face Mesh 的关键点序号
 const int kLipOuter[] = {61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291, 375, 321, 405, 314, 17, 84, 181, 91, 146};
@@ -178,7 +115,7 @@ std::vector<Vec2> Expand(const std::vector<Vec2>& ring, const Vec2& center, floa
     return out;
 }
 
-void AddLips(Builder& b, const LmFace& face, const MakeupLook& look, float intensity, float faceWidth) {
+void AddLips(Builder& b, const LmFace& face, const LmMakeupLook& look, float intensity, float faceWidth) {
     const float opacity = look.lipOpacity * intensity;
     if (opacity <= 0.001f) {
         return;
@@ -198,7 +135,7 @@ void AddLips(Builder& b, const LmFace& face, const MakeupLook& look, float inten
     b.Strip(Expand(outer, center, faceWidth * 0.012f), 0.0f, outer, opacity, look.lip, true);
 }
 
-void AddBrow(Builder& b, const LmFace& face, const int* upper, const int* lower, const MakeupLook& look,
+void AddBrow(Builder& b, const LmFace& face, const int* upper, const int* lower, const LmMakeupLook& look,
              float intensity, float faceWidth) {
     // 眉色是叠底色，眉毛本身已经很深，浓度打七折，避免画成一条粗黑眉
     const float opacity = look.browOpacity * intensity * 0.7f;
@@ -226,7 +163,7 @@ void AddBrow(Builder& b, const LmFace& face, const int* upper, const int* lower,
     (void)faceWidth;
 }
 
-void AddShadow(Builder& b, const LmFace& face, const int* lid, const int* browLower, const MakeupLook& look,
+void AddShadow(Builder& b, const LmFace& face, const int* lid, const int* browLower, const LmMakeupLook& look,
                float intensity) {
     const float opacity = look.shadowOpacity * intensity;
     if (opacity <= 0.001f) {
@@ -261,8 +198,10 @@ void AddShadow(Builder& b, const LmFace& face, const int* lid, const int* browLo
 }
 
 /// 沿上睫毛根画眼线（外眼角处加粗并带一个小眼尾）和一排睫毛
-void AddLinerAndLashes(Builder& b, const LmFace& face, const int* lid, const int* browLower, float linerOpacity,
-                       float lashOpacity, float faceWidth) {
+void AddLinerAndLashes(Builder& b, const LmFace& face, const int* lid, const int* browLower, const LmMakeupLook& look,
+                       float intensity, float faceWidth) {
+    const float linerOpacity = look.linerOpacity * intensity;
+    const float lashOpacity = look.lashOpacity * intensity;
     if (linerOpacity <= 0.001f && lashOpacity <= 0.001f) {
         return;
     }
@@ -294,12 +233,12 @@ void AddLinerAndLashes(Builder& b, const LmFace& face, const int* lid, const int
             base.push_back(p);
             top.push_back(Vec2{p.x + up.x * width, p.y + up.y * width});
         }
-        b.Strip(base, linerOpacity, top, linerOpacity * 0.5f, kLinerColor, false);
+        b.Strip(base, linerOpacity, top, linerOpacity * 0.5f, look.liner, false);
         // 眼尾：从外眼角向外上方挑出一小段
         const Vec2 tipBase = top[8];
         const Vec2 tip{outer.x + (out.x * 0.9f + up.x * 0.45f) * faceWidth * 0.045f,
                        outer.y + (out.y * 0.9f + up.y * 0.45f) * faceWidth * 0.045f};
-        b.Tri(outer, linerOpacity, tipBase, linerOpacity * 0.5f, tip, 0.0f, kLinerColor);
+        b.Tri(outer, linerOpacity, tipBase, linerOpacity * 0.5f, tip, 0.0f, look.liner);
     }
 
     if (lashOpacity > 0.001f) {
@@ -324,35 +263,35 @@ void AddLinerAndLashes(Builder& b, const LmFace& face, const int* lid, const int
             const Vec2 tip{root.x + dir.x * len, root.y + dir.y * len};
             const Vec2 r0{root.x - side.x, root.y - side.y};
             const Vec2 r1{root.x + side.x, root.y + side.y};
-            b.Tri(r0, lashOpacity, r1, lashOpacity, tip, lashOpacity * 0.15f, kLashColor);
+            b.Tri(r0, lashOpacity, r1, lashOpacity, tip, lashOpacity * 0.15f, look.lash);
         }
     }
 }
 
-const MakeupLook* FindLook(const LmParams& params, float& intensity) {
-    const int index = params.styleType - 1;
+const LmMakeupLook* FindLook(const LmParams& params, float& intensity) {
     intensity = std::min(std::max(params.makeupMakeupIntensity, 0.0f), 1.0f);
-    if (index < 0 || index >= kLookCount || intensity <= 0.001f) {
+    const LmLook* style = LmActiveStyle(params);
+    if (!style || !style->hasMakeup || intensity <= 0.001f) {
         return nullptr;
     }
-    return &kLooks[index];
+    return &style->makeup;
 }
 
 } // namespace
 
 float LmMakeupFoundation(const LmParams& params) {
     float intensity = 0.0f;
-    const MakeupLook* look = FindLook(params, intensity);
+    const LmMakeupLook* look = FindLook(params, intensity);
     return look ? look->foundation * intensity * 0.25f : 0.0f;
 }
 
 int LmBuildMakeup(const LmFace& face, const LmParams& params, std::vector<LmMakeupVertex>& vertices) {
     float intensity = 0.0f;
-    const MakeupLook* found = FindLook(params, intensity);
+    const LmMakeupLook* found = FindLook(params, intensity);
     if (!found) {
         return 0;
     }
-    const MakeupLook& look = *found;
+    const LmMakeupLook& look = *found;
     const size_t before = vertices.size();
     Builder b(vertices);
 
@@ -394,11 +333,8 @@ int LmBuildMakeup(const LmFace& face, const LmParams& params, std::vector<LmMake
     }
     AddShadow(b, face, kLidLeft, kBrowLowerLeft, look, intensity);
     AddShadow(b, face, kLidRight, kBrowLowerRight, look, intensity);
-    const int index = params.styleType - 1;
-    AddLinerAndLashes(b, face, kLidLeft, kBrowLowerLeft, kLinerOpacity[index] * intensity,
-                      kLashOpacity[index] * intensity, faceWidth);
-    AddLinerAndLashes(b, face, kLidRight, kBrowLowerRight, kLinerOpacity[index] * intensity,
-                      kLashOpacity[index] * intensity, faceWidth);
+    AddLinerAndLashes(b, face, kLidLeft, kBrowLowerLeft, look, intensity, faceWidth);
+    AddLinerAndLashes(b, face, kLidRight, kBrowLowerRight, look, intensity, faceWidth);
     AddBrow(b, face, kBrowUpperLeft, kBrowLowerLeft, look, intensity, faceWidth);
     AddBrow(b, face, kBrowUpperRight, kBrowLowerRight, look, intensity, faceWidth);
     AddLips(b, face, look, intensity, faceWidth);

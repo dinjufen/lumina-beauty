@@ -14,6 +14,7 @@
 #include "LmGLContext.hpp"
 #include "LmImageLoader.hpp"
 #include "LmLog.hpp"
+#include "LmLook.hpp"
 #include "LmMakeup.hpp"
 #include "LmParams.hpp"
 #include "LmPipeline.hpp"
@@ -294,6 +295,42 @@ LUMINA_API int lumina_set_background_image(lumina_engine* e, const char* path) {
     e->pendingBackgroundH = h;
     e->backgroundDirty = true;
     return ok ? 1 : 0;
+}
+
+namespace {
+
+int SetLook(lumina_engine* e, std::shared_ptr<const LmLook> look) {
+    std::lock_guard<std::mutex> lock(e->paramsMutex);
+    e->params.look = std::move(look);
+    return 1;
+}
+
+int LoadLook(lumina_engine* e, const char* source, bool isFile) {
+    if (!e) {
+        return 0;
+    }
+    if (!source || !source[0]) {
+        return SetLook(e, nullptr);
+    }
+    auto look = std::make_shared<LmLook>();
+    std::string error;
+    const bool ok = isFile ? LmLoadLookFile(source, *look, error) : LmParseLook(source, *look, error);
+    if (!ok) {
+        LM_LOG_E << "look " << (isFile ? source : "(json)") << ": " << error;
+        return 0;
+    }
+    LM_LOG_I << "look loaded: " << (look->name.empty() ? std::string(isFile ? source : "(json)") : look->name);
+    return SetLook(e, look);
+}
+
+} // namespace
+
+LUMINA_API int lumina_set_look_file(lumina_engine* e, const char* path) {
+    return LoadLook(e, path, true);
+}
+
+LUMINA_API int lumina_set_look_json(lumina_engine* e, const char* json) {
+    return LoadLook(e, json, false);
 }
 
 LUMINA_API int lumina_set_background_rgba(lumina_engine* e, const uint8_t* rgba, int width, int height) {

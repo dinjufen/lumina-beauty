@@ -1,0 +1,26 @@
+{
+  "format": "lumina-look",
+  "version": 1,
+  "name": "温暖",
+  "color": {
+    "temperature": 0.160,
+    "tint": 0.030,
+    "saturation": 0.040,
+    "contrast": -0.020,
+    "brightness": 0.050,
+    "fade": 0.040,
+    "shadow_tint": [0.030, 0.010, 0.000],
+    "highlight_tint": [0.040, 0.030, 0.000],
+    "skin": 0.000
+  },
+  "makeup": {
+    "lips": {"color": [0.950, 0.560, 0.440], "opacity": 0.600},
+    "blush": {"color": [1.000, 0.800, 0.700], "opacity": 0.450, "size": 0.170},
+    "brows": {"color": [0.660, 0.540, 0.440], "opacity": 0.400},
+    "eye_shadow": {"color": [0.940, 0.780, 0.660], "opacity": 0.400},
+    "contour": {"color": [1.000, 1.000, 1.000], "opacity": 0.000},
+    "eyeliner": {"color": [0.220, 0.180, 0.180], "opacity": 0.500},
+    "lashes": {"color": [0.120, 0.100, 0.100], "opacity": 0.500},
+    "foundation": 0.150
+  }
+}
