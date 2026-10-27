@@ -44,7 +44,8 @@ std::vector<Rgb> DrawMannequin(int w, int h, const LmAvatarFace& f) {
                 return ex * ex + ey * ey < 1.0f;
             };
             if (py < f.chinY - 0.55f && std::fabs(px) < 1.6f + (f.chinY - 0.55f - py) * 0.8f) c = shirt;
-            if (std::fabs(px) < 0.45f && py < f.chinY + 0.3f && py > f.chinY - 1.0f) c = shade;
+            // 脖子半宽约为半个脸宽的 0.78，与着色器里项链贴合的宽度一致
+            if (std::fabs(px) < 0.78f && py < f.chinY + 0.5f && py > f.chinY - 1.0f) c = shade;
             if (ellipse(f.earLeftX - 0.02f, f.earY + 0.2f, 0.13f, 0.25f) ||
                 ellipse(f.earRightX + 0.02f, f.earY + 0.2f, 0.13f, 0.25f)) c = shade;
             if (ellipse(0.0f, 0.15f, 1.12f, 1.2f)) c = hair;

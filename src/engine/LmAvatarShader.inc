@@ -512,22 +512,50 @@ vec4 drawEars(vec2 p, int kind, float earLX, float earRX, float earY, float yaw)
 }
 
 // ---------------------------------------------------------------- 颈部
+// 项链绕脖子一圈：前半圈在脖子前面垂成 U 形，后半圈在脖子后面，只在脖子两侧露出一点，往后绕时逐渐看不见。
+// a 为绕圈的角度，sin(a) < 0 是前半圈。脖子半宽约 0.78（脸宽的四成左右），项链贴着脖子稍微往外一点。
+const float kNeckHalf = 0.78;
+vec2 neckLoop(float a, float rx, float drop) {
+    float s = sin(a);
+    return vec2(cos(a) * rx, -0.22 + s * (s < 0.0 ? drop : 0.1));
+}
+// 后半圈能看到多少：在脖子轮廓以外才露出来，越往后越暗
+float neckBack(float a, float rx) {
+    float x = abs(cos(a) * rx);
+    return sin(a) < 0.0 ? 1.0 : clamp((x - kNeckHalf + 0.06) / 0.06, 0.0, 1.0);
+}
+
 vec4 drawNeck(vec2 p, int kind, float chinY, float yaw) {
     vec4 acc = vec4(0.0);
     // 脖子不跟着转头，抵消一点五官随转头的平移
     vec2 q = p - vec2(-yaw * 0.05, chinY);
     vec3 gold = vec3(1.0, 0.78, 0.25);
     if (kind == 1) {          // 大金链子：一圈粗链节，下面挂一块大金牌
-        for (int k = 0; k < 15; ++k) {
-            float t = float(k) / 14.0;
-            float a = mix(-0.35, -2.79, t);
-            vec2 c = vec2(cos(a) * 0.72, -0.28 + sin(a) * 0.48);
-            float ang = a + 1.5708;
-            vec2 l = rot(q - c, -ang);
-            float link = abs(sdEllipse(l, k % 2 == 0 ? vec2(0.085, 0.05) : vec2(0.07, 0.03))) - 0.022;
-            put(acc, vec3(0.62, 0.42, 0.1), link - 0.012);
-            put(acc, gold, link);
-            putA(acc, vec3(1.0, 0.96, 0.75), max(link + 0.012, -l.y), 0.7);
+        const float rx = 0.84;
+        const int kLinks = 30;
+        // 先画后半圈（在脖子后面，偏暗），再画前半圈
+        for (int pass = 0; pass < 2; ++pass) {
+            for (int k = 0; k < kLinks; ++k) {
+                float a = 6.2831853 * (float(k) + 0.5) / float(kLinks);
+                bool front = sin(a) < 0.0;
+                if (front != (pass == 1)) {
+                    continue;
+                }
+                float vis = neckBack(a, rx);
+                if (vis <= 0.0) {
+                    continue;
+                }
+                vec2 c = neckLoop(a, rx, 0.5);
+                vec2 tangent = neckLoop(a + 0.01, rx, 0.5) - c;
+                vec2 l = rot(q - c, -atan(tangent.y, tangent.x));
+                float link = abs(sdEllipse(l, k % 2 == 0 ? vec2(0.085, 0.05) : vec2(0.07, 0.03))) - 0.022;
+                float shade = front ? 1.0 : 0.7;
+                putA(acc, vec3(0.62, 0.42, 0.1) * shade, link - 0.012, vis);
+                putA(acc, gold * shade, link, vis);
+                if (front) {
+                    putA(acc, vec3(1.0, 0.96, 0.75), max(link + 0.012, -l.y), 0.7);
+                }
+            }
         }
         vec2 m = q - vec2(0.0, -0.9);
         putO(acc, gold, sdCircle(m, 0.17), 0.025);
@@ -535,22 +563,39 @@ vec4 drawNeck(vec2 p, int kind, float chinY, float yaw) {
         put(acc, vec3(0.85, 0.62, 0.15), sdSeg(m, vec2(0.0, -0.08), vec2(0.0, 0.08)) - 0.018);
         putA(acc, vec3(1.0), sdSeg(m, vec2(-0.08, 0.02), vec2(-0.02, 0.1)) - 0.015, 0.6);
     } else if (kind == 2) {   // 珍珠项链
-        for (int k = 0; k < 19; ++k) {
-            float t = float(k) / 18.0;
-            float a = mix(-0.3, -2.84, t);
-            vec2 c = vec2(cos(a) * 0.62, -0.28 + sin(a) * 0.4);
-            float r = 0.045 + 0.012 * (1.0 - abs(t - 0.5) * 2.0);
-            putO(acc, vec3(0.96, 0.94, 0.9), sdCircle(q - c, r), 0.008);
-            put(acc, vec3(1.0), sdCircle(q - c - vec2(-r * 0.35, r * 0.35), r * 0.3));
+        const float rx = 0.82;
+        const int kPearls = 44;
+        for (int pass = 0; pass < 2; ++pass) {
+            for (int k = 0; k < kPearls; ++k) {
+                float a = 6.2831853 * (float(k) + 0.5) / float(kPearls);
+                bool front = sin(a) < 0.0;
+                if (front != (pass == 1)) {
+                    continue;
+                }
+                float vis = neckBack(a, rx);
+                if (vis <= 0.0) {
+                    continue;
+                }
+                vec2 c = neckLoop(a, rx, 0.4);
+                // 正前方的珍珠稍大
+                float r = 0.042 + (front ? 0.014 * max(-sin(a), 0.0) : 0.0);
+                float shade = front ? 1.0 : 0.75;
+                putA(acc, kInk, sdCircle(q - c, r + 0.008), vis);
+                putA(acc, vec3(0.96, 0.94, 0.9) * shade, sdCircle(q - c, r), vis);
+                if (front) {
+                    put(acc, vec3(1.0), sdCircle(q - c - vec2(-r * 0.35, r * 0.35), r * 0.3));
+                }
+            }
         }
     } else if (kind == 3) {   // 哈达：白色丝巾绕过脖子，两端垂在胸前，末端有流苏
         vec3 silk = vec3(0.97, 0.97, 0.99);
-        float collar = abs(sdEllipse(q - vec2(0.0, -0.18), vec2(0.62, 0.3))) - 0.09;
+        // 绕过脖子后面的那段在脖子两侧露出来，和项链一样贴着脖子的宽度
+        float collar = abs(sdEllipse(q - vec2(0.0, -0.18), vec2(kNeckHalf + 0.06, 0.3))) - 0.09;
         collar = max(collar, q.y + 0.18);
         putA(acc, silk, collar, 0.95);
         for (int i = 0; i < 2; ++i) {
             float sx = i == 0 ? -1.0 : 1.0;
-            vec2 b = q - vec2(sx * 0.42, -0.35);
+            vec2 b = q - vec2(sx * 0.55, -0.35);
             float wave = sin(b.y * 7.0 + uTime * 1.5 + sx) * 0.03;
             float x = b.x - wave + b.y * sx * 0.12;
             float band = max(abs(x) - 0.2, max(b.y, -(b.y + 1.5)));
