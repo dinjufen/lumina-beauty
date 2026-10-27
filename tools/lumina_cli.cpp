@@ -3,7 +3,7 @@
 // usage: lumina-cli <models dir> <width> <height> <in.i420> <out.i420> [name=value ...] [--repeat N]
 //   names: smooth whiten sharpen clarity eye slim narrow cheekbone jaw nose forehead shrink_head teeth pouch folds
 //          temperature tint saturation brightness contrast filter filter_intensity style style_color style_makeup
-//          background avatar headwear, plus background_image=<path>, look=<look file>, matrix=601|709, full_range=0|1
+//          background avatar head eyes ears neck mouth (accessory slots; headwear is the old single list), plus background_image=<path>, look=<look file>, matrix=601|709, full_range=0|1
 //   The input file may contain several frames back to back; each is processed in turn.
 //   --repeat N processes every frame N times (lets temporal smoothing settle) and reports the average time.
 #include <chrono>
@@ -30,7 +30,8 @@ const Name kNames[] = {
     {"saturation", LUMINA_SATURATION}, {"brightness", LUMINA_BRIGHTNESS}, {"contrast", LUMINA_CONTRAST},
     {"filter", LUMINA_FILTER}, {"filter_intensity", LUMINA_FILTER_INTENSITY}, {"style", LUMINA_STYLE},
     {"style_color", LUMINA_STYLE_COLOR}, {"style_makeup", LUMINA_STYLE_MAKEUP}, {"background", LUMINA_BACKGROUND},
-    {"avatar", LUMINA_AVATAR}, {"headwear", LUMINA_HEADWEAR},
+    {"avatar", LUMINA_AVATAR}, {"headwear", LUMINA_HEADWEAR}, {"head", LUMINA_ACC_HEAD}, {"eyes", LUMINA_ACC_EYES},
+    {"ears", LUMINA_ACC_EARS}, {"neck", LUMINA_ACC_NECK}, {"mouth", LUMINA_ACC_MOUTH},
 };
 
 void Log(lumina_log_level level, const char* message, void*) {

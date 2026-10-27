@@ -14,7 +14,10 @@ makeup, virtual background, animated cartoon avatars and headwear. Ships as a sm
 | Face shape | bigger eyes, slim face, narrow face, cheekbones, jaw, nose width, forehead, smaller head |
 | Color | 15 filters, 11 style looks (color grade + makeup: lips, blush, brows, eye shadow, eyeliner, lashes, contour, foundation), temperature / tint / saturation / brightness / contrast |
 | Background | blur or replace, with a hair-aware person mask and edge refinement |
-| Fun | 6 animated cartoon avatars (blink, mouth, smile, brows, gaze, head pose) and 8 headwear items |
+| Fun | 6 animated cartoon avatars (blink, mouth, smile, brows, gaze, head pose); accessories in 5 freely combined slots: head (8), eyes (5), earrings (4), neck (4), in the mouth (4) |
+
+Accessory slots and items are the `lumina_acc_*` enums in `lumina.h` (parameters `LUMINA_ACC_HEAD` and so on).
+To check them without a camera, `lumina-preview out.ppm head=3 eyes=1 neck=1 mouth=1` draws them on a mannequin.
 
 All effects run on the GPU through an offscreen OpenGL 3.3 context. Faces are tracked with MediaPipe
 models through ONNX Runtime on the CPU. Avatars and headwear are drawn procedurally in shaders, so no
@@ -31,6 +34,7 @@ models/                   MediaPipe models converted to ONNX (Apache 2.0, see mo
 looks/                    look files: the built-in filters and styles as JSON, format in looks/README.md
 tools/lumina_cli.cpp      process raw I420 frames from the command line
 tools/lumina_look.cpp     look tool: export the built-ins, check look files
+tools/lumina_preview.cpp  accessory preview: draws avatars and accessories on a mannequin
 plugins/obs/              OBS Studio filter plugin (GPL-2.0-or-later)
 ```
 

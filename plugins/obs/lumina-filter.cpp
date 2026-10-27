@@ -1,5 +1,5 @@
 // OBS Studio video filter: face beauty, color filters, style makeup, virtual background, cartoon avatars
-// and headwear for any asynchronous video source (webcams, capture cards, media sources).
+// and accessories for any asynchronous video source (webcams, capture cards, media sources).
 //
 // Copyright (c) 2026 Lumina Beauty contributors.
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -48,9 +48,28 @@ const char* kStyleNames[] = {"Style.None",    "Style.Fair",    "Style.Korean",  
                              "Style.Deep",    "Style.BareFace", "Style.Senior",  "Style.Junior"};
 const char* kAvatarNames[] = {"Avatar.None", "Avatar.Pig", "Avatar.Bunny", "Avatar.Cat",
                               "Avatar.Bear", "Avatar.Panda", "Avatar.Frog"};
-const char* kHeadwearNames[] = {"Headwear.None",  "Headwear.CatEars", "Headwear.BunnyEars", "Headwear.Crown",
-                                "Headwear.Flowers", "Headwear.Halo",  "Headwear.Horns",     "Headwear.PartyHat",
-                                "Headwear.Sunglasses"};
+const char* kHeadNames[] = {"Acc.None",  "Head.CatEars", "Head.BunnyEars", "Head.Crown", "Head.Flowers",
+                            "Head.Halo", "Head.Horns",   "Head.PartyHat",  "Head.SantaHat"};
+const char* kEyesNames[] = {"Acc.None", "Eyes.Sunglasses", "Eyes.RoundGlasses", "Eyes.ThickFrames",
+                            "Eyes.HeartGlasses", "Eyes.EyePatch"};
+const char* kEarsNames[] = {"Acc.None", "Ears.GoldHoops", "Ears.PearlStuds", "Ears.Tassels", "Ears.Cherries"};
+const char* kNeckNames[] = {"Acc.None", "Neck.GoldChain", "Neck.Pearls", "Neck.Khata", "Neck.BowTie"};
+const char* kMouthNames[] = {"Acc.None", "Mouth.Cigar", "Mouth.Cigarette", "Mouth.Lollipop", "Mouth.Rose"};
+
+// 五个配饰槽位：设置项名、参数、选项名
+struct AccSlot {
+    const char* key;
+    lumina_param param;
+    const char* const* names;
+    size_t count;
+};
+const AccSlot kAccSlots[] = {
+    {"acc_head", LUMINA_ACC_HEAD, kHeadNames, sizeof(kHeadNames) / sizeof(kHeadNames[0])},
+    {"acc_eyes", LUMINA_ACC_EYES, kEyesNames, sizeof(kEyesNames) / sizeof(kEyesNames[0])},
+    {"acc_ears", LUMINA_ACC_EARS, kEarsNames, sizeof(kEarsNames) / sizeof(kEarsNames[0])},
+    {"acc_neck", LUMINA_ACC_NECK, kNeckNames, sizeof(kNeckNames) / sizeof(kNeckNames[0])},
+    {"acc_mouth", LUMINA_ACC_MOUTH, kMouthNames, sizeof(kMouthNames) / sizeof(kMouthNames[0])},
+};
 const char* kBackgroundNames[] = {"Background.None", "Background.Blur", "Background.Image"};
 
 struct Filter {
@@ -106,7 +125,19 @@ void Update(void* data, obs_data_t* settings) {
     lumina_set_param(f->engine, LUMINA_STYLE_COLOR, obs_data_get_int(settings, "style_color") / 100.0f);
     lumina_set_param(f->engine, LUMINA_STYLE_MAKEUP, obs_data_get_int(settings, "style_makeup") / 100.0f);
     lumina_set_param(f->engine, LUMINA_AVATAR, static_cast<float>(obs_data_get_int(settings, "avatar")));
-    lumina_set_param(f->engine, LUMINA_HEADWEAR, static_cast<float>(obs_data_get_int(settings, "headwear")));
+    // 旧版本只有一个「头饰」下拉框：1 到 7 是头顶的配饰，8 是墨镜。迁移到新槽位后删掉旧设置
+    if (obs_data_has_user_value(settings, "headwear")) {
+        const long long old = obs_data_get_int(settings, "headwear");
+        if (old == LUMINA_HEADWEAR_SUNGLASSES) {
+            obs_data_set_int(settings, "acc_eyes", LUMINA_ACC_EYES_SUNGLASSES);
+        } else if (old > 0) {
+            obs_data_set_int(settings, "acc_head", old);
+        }
+        obs_data_erase(settings, "headwear");
+    }
+    for (const AccSlot& slot : kAccSlots) {
+        lumina_set_param(f->engine, slot.param, static_cast<float>(obs_data_get_int(settings, slot.key)));
+    }
     lumina_set_param(f->engine, LUMINA_BACKGROUND, static_cast<float>(obs_data_get_int(settings, "background")));
 
     const char* path = obs_data_get_string(settings, "background_image");
@@ -157,7 +188,9 @@ void Defaults(obs_data_t* settings) {
     obs_data_set_default_int(settings, "style_makeup", 80);
     obs_data_set_default_int(settings, "background", 0);
     obs_data_set_default_int(settings, "avatar", 0);
-    obs_data_set_default_int(settings, "headwear", 0);
+    for (const AccSlot& slot : kAccSlots) {
+        obs_data_set_default_int(settings, slot.key, 0);
+    }
 }
 
 obs_properties_t* Properties(void*) {
@@ -189,7 +222,9 @@ obs_properties_t* Properties(void*) {
     obs_properties_add_path(fun, "background_image", obs_module_text("background_image"), OBS_PATH_FILE,
                             "Images (*.png *.jpg *.jpeg *.bmp)", nullptr);
     AddList(fun, "avatar", kAvatarNames, sizeof(kAvatarNames) / sizeof(kAvatarNames[0]));
-    AddList(fun, "headwear", kHeadwearNames, sizeof(kHeadwearNames) / sizeof(kHeadwearNames[0]));
+    for (const AccSlot& slot : kAccSlots) {
+        AddList(fun, slot.key, slot.names, slot.count);
+    }
     obs_properties_add_group(props, "group_fun", obs_module_text("Group.Fun"), OBS_GROUP_NORMAL, fun);
     return props;
 }

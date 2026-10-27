@@ -127,6 +127,24 @@ int main() {
     ok = RunFormat(lookFilter, VIDEO_FORMAT_I420, VIDEO_CS_601, VIDEO_RANGE_FULL) && ok;
     Destroy(lookFilter);
     obs_data_release(lookSettings);
+
+    // 旧版「头饰」设置迁移到新的配饰槽位：8 是墨镜，归到眼部；其他是头顶
+    const long long oldValues[2] = {LUMINA_HEADWEAR_SUNGLASSES, LUMINA_HEADWEAR_CROWN};
+    for (long long old : oldValues) {
+        obs_data_t* legacy = obs_data_create();
+        Defaults(legacy);
+        obs_data_set_int(legacy, "headwear", old);
+        void* legacyFilter = Create(legacy, nullptr);
+        const bool sunglasses = old == LUMINA_HEADWEAR_SUNGLASSES;
+        const bool migrated = !obs_data_has_user_value(legacy, "headwear") &&
+                              obs_data_get_int(legacy, sunglasses ? "acc_eyes" : "acc_head") ==
+                                  (sunglasses ? LUMINA_ACC_EYES_SUNGLASSES : LUMINA_ACC_HEAD_CROWN);
+        printf("  old headwear %lld migrates: %s\n", old, migrated ? "ok" : "FAILED");
+        ok = ok && migrated;
+        Destroy(legacyFilter);
+        obs_data_release(legacy);
+    }
+
     obs_shutdown();
     printf(ok ? "PASS\n" : "FAIL\n");
     return ok ? 0 : 1;

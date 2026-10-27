@@ -19,12 +19,7 @@ if(APPLE AND NOT CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64")
     list(APPEND _obs_includes ${SIMDE_INCLUDE_DIR})
 endif()
 
-# 插件静态链接美颜核心，只额外带一个 onnxruntime.dll
-add_library(lumina_static STATIC ${LUMINA_ENGINE_SOURCES} ${LUMINA_PLATFORM_SOURCES})
-target_include_directories(lumina_static PUBLIC ${PROJECT_SOURCE_DIR}/include PRIVATE ${PROJECT_SOURCE_DIR}/src/engine)
-target_link_libraries(lumina_static PRIVATE onnxruntime_imported)
-lumina_link_platform(lumina_static PUBLIC)
-
+# 插件静态链接美颜核心（lumina_static，见顶层 CMakeLists.txt），只额外带一个 onnxruntime 动态库
 add_library(lumina-beauty MODULE lumina-filter.cpp)
 target_include_directories(lumina-beauty PRIVATE ${_obs_includes})
 target_link_libraries(lumina-beauty PRIVATE lumina_static onnxruntime_imported ${OBS_LIBRARY})

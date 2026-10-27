@@ -13,7 +13,10 @@
 | 美型 | 大眼、瘦脸、窄脸、颧骨、下巴、鼻翼、额头、小头 |
 | 色彩 | 15 款滤镜，11 款风格妆（调色 + 妆容：口红、腮红、眉毛、眼影、眼线、睫毛、修容、粉底），色温 / 色调 / 饱和度 / 亮度 / 对比度 |
 | 背景 | 背景虚化或替换，人像掩膜能识别头发，并做边缘细化 |
-| 趣味 | 6 款会动的卡通头像（眨眼、张嘴、微笑、挑眉、视线、头部姿态）和 8 款头饰 |
+| 趣味 | 6 款会动的卡通头像（眨眼、张嘴、微笑、挑眉、视线、头部姿态）；配饰分 5 个槽位可自由组合：头顶 8 款、眼部 5 款、耳饰 4 款、颈部 4 款、嘴上叼的 4 款 |
+
+配饰的槽位和选项见 `lumina.h` 里的 `lumina_acc_*`（`LUMINA_ACC_HEAD` 等参数）。不用摄像头也能预览：
+`lumina-preview out.ppm head=3 eyes=1 neck=1 mouth=1` 会把它们画在一张示意脸上。
 
 所有效果都在 GPU 上运行，使用离屏的 OpenGL 3.3 上下文。人脸跟踪用的是 MediaPipe 模型，通过 ONNX Runtime 在 CPU
 上推理。卡通头像和头饰都由着色器程序化绘制，不需要任何图片素材。
@@ -29,6 +32,7 @@ models/                   转换成 ONNX 的 MediaPipe 模型（Apache 2.0，见
 looks/                    素材文件：内置滤镜和风格妆的 JSON 版本，格式见 looks/README.md
 tools/lumina_cli.cpp      命令行工具，处理原始 I420 帧
 tools/lumina_look.cpp     素材工具：导出内置效果、检查素材文件
+tools/lumina_preview.cpp  配饰预览：把头像和配饰画在示意脸上出图
 plugins/obs/              OBS Studio 滤镜插件（GPL-2.0-or-later）
 ```
 

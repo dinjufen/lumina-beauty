@@ -1234,24 +1234,30 @@ bool LmPipeline::Render(int w, int h, const uint8_t* in, uint8_t* out, const LmP
         resultTex = m_composited.tex;
     }
 
-    // 卡通头像与头饰：画在最上层，虚拟背景之后，伸出人像轮廓的部分（耳朵、帽子）也能完整显示
-    if ((params.avatar > 0 || params.headwear > 0) && !avatars.empty()) {
+    // 卡通头像与配饰：画在最上层，虚拟背景之后，伸出人像轮廓的部分（耳朵、帽子）也能完整显示
+    if ((params.avatar > 0 || params.HasAccessory()) && !avatars.empty()) {
         const int count = static_cast<int>(avatars.size() < 2 ? avatars.size() : 2);
         float pose[8] = {0};
         float pose2[8] = {0};
         float expr[8] = {0};
         float expr2[8] = {0};
+        float face3[8] = {0};
+        float face4[8] = {0};
         for (int i = 0; i < count; ++i) {
             const LmAvatarFace& a = avatars[i];
-            const float values[4][4] = {{a.cx, a.cy, a.ux, a.uy},
+            const float values[6][4] = {{a.cx, a.cy, a.ux, a.uy},
                                         {a.scale, a.yaw, a.pitch, a.top},
                                         {a.eyeLeft, a.eyeRight, a.mouthOpen, a.smile},
-                                        {a.brow, a.gazeX, a.gazeY, a.eyeHalf}};
+                                        {a.brow, a.gazeX, a.gazeY, a.eyeHalf},
+                                        {a.mouthY, a.mouthHalf, a.chinY, a.earY},
+                                        {a.earLeftX, a.earRightX, 0.0f, 0.0f}};
             for (int k = 0; k < 4; ++k) {
                 pose[i * 4 + k] = values[0][k];
                 pose2[i * 4 + k] = values[1][k];
                 expr[i * 4 + k] = values[2][k];
                 expr2[i * 4 + k] = values[3][k];
+                face3[i * 4 + k] = values[4][k];
+                face4[i * 4 + k] = values[5][k];
             }
         }
         static const auto start = std::chrono::steady_clock::now();
@@ -1261,12 +1267,18 @@ bool LmPipeline::Render(int w, int h, const uint8_t* in, uint8_t* out, const LmP
         SetVec2(m_progAvatar, "uSize", static_cast<float>(w), static_cast<float>(h));
         SetInt(m_progAvatar, "uFaceCount", count);
         SetInt(m_progAvatar, "uAvatar", params.avatar);
-        SetInt(m_progAvatar, "uHeadwear", params.headwear);
+        SetInt(m_progAvatar, "uAccHead", params.accHead);
+        SetInt(m_progAvatar, "uAccEyes", params.accEyes);
+        SetInt(m_progAvatar, "uAccEars", params.accEars);
+        SetInt(m_progAvatar, "uAccNeck", params.accNeck);
+        SetInt(m_progAvatar, "uAccMouth", params.accMouth);
         SetFloat(m_progAvatar, "uTime", seconds);
         glUniform4fv(glGetUniformLocation(m_progAvatar, "uPose"), 2, pose);
         glUniform4fv(glGetUniformLocation(m_progAvatar, "uPose2"), 2, pose2);
         glUniform4fv(glGetUniformLocation(m_progAvatar, "uExpr"), 2, expr);
         glUniform4fv(glGetUniformLocation(m_progAvatar, "uExpr2"), 2, expr2);
+        glUniform4fv(glGetUniformLocation(m_progAvatar, "uFace3"), 2, face3);
+        glUniform4fv(glGetUniformLocation(m_progAvatar, "uFace4"), 2, face4);
         BindTexture(0, resultTex);
         DrawTo(m_avatarOut);
         resultTex = m_avatarOut.tex;

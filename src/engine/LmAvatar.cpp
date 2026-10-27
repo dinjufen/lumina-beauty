@@ -101,6 +101,14 @@ void LmBuildAvatarFace(const LmFace& face, LmAvatarState& state, LmAvatarFace& o
     f.top = local(P(face, kForeheadTop)).y + 0.35f;
     f.mouthY = local(Vec2{(face.x[kLipUpper] + face.x[kLipLower]) * 0.5f,
                           (face.y[kLipUpper] + face.y[kLipLower]) * 0.5f}).y;
+    f.mouthHalf = Dist(P(face, kMouthLeft), P(face, kMouthRight)) * 0.5f / s;
+    f.chinY = chin.y;
+    // 耳朵：脸两侧外缘点大致在耳屏前，耳垂再往下一点
+    const Vec2 earL = local(faceL);
+    const Vec2 earR = local(faceR);
+    f.earLeftX = earL.x;
+    f.earRightX = earR.x;
+    f.earY = (earL.y + earR.y) * 0.5f - 0.2f;
 
     // 睁眼程度：上下眼睑距离 / 眼宽，按近期最大值归一化
     const float eyeRatioL = Dist(P(face, kEyeUpperLeft), P(face, kEyeLowerLeft)) /

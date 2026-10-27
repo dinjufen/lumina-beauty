@@ -44,6 +44,9 @@ jobs:
           "$bin/lumina-look" verify looks
           "$bin/lumina-cli" "$bin/models" 640 480 frame.i420 look.i420 look=looks/style-korean.json style_color=1
           python tests/check_changed.py frame.i420 look.i420
+          # 配饰：着色器能编译，五个槽位和头像一起能画出来
+          "$bin/lumina-preview" preview.ppm head=8 eyes=4 ears=3 neck=3 mouth=1 avatar=5
+          test -s preview.ppm
 
   # macOS OBS 插件：和 macOS 核心构建一样只在发版或手动触发时跑，产出可直接安装的 lumina-beauty.plugin
   obs-plugin-macos:

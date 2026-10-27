@@ -1,4 +1,4 @@
-// 卡通头像与头饰的片段着色器，由 LmPipeline.cpp 包含。
+// 卡通头像与配饰（头顶、眼部、耳饰、颈部、嘴部）的片段着色器，由 LmPipeline.cpp 包含。
 // 所有图形用二维距离场（SDF）在局部坐标系里画出：原点在两眼中点，x 沿两眼连线，y 向上，1 个单位为半个脸宽。
 // 图形全部为自行设计，不使用任何外部素材。
 const char* kAvatarShader = R"(#version 300 es
@@ -12,8 +12,14 @@ uniform vec4 uPose[2];      // cx, cy（像素）, ux, uy
 uniform vec4 uPose2[2];     // scale（像素/单位）, yaw, pitch, top
 uniform vec4 uExpr[2];      // eyeLeft, eyeRight, mouthOpen, smile
 uniform vec4 uExpr2[2];     // brow, gazeX, gazeY, eyeHalf
+uniform vec4 uFace3[2];     // mouthY, mouthHalf, chinY, earY
+uniform vec4 uFace4[2];     // earLeftX, earRightX
 uniform int uAvatar;
-uniform int uHeadwear;
+uniform int uAccHead;
+uniform int uAccEyes;
+uniform int uAccEars;
+uniform int uAccNeck;
+uniform int uAccMouth;
 uniform float uTime;
 
 float AA;
@@ -266,7 +272,19 @@ vec4 drawAvatar(vec2 p, int kind, vec4 pose2, vec4 expr, vec4 expr2) {
     return acc;
 }
 
-vec4 drawHeadwear(vec2 p, int kind, float top, float eyeHalf, float yaw) {
+float dot2(vec2 v) { return dot(v, v); }
+// 心形，底尖在原点，高约 1
+float sdHeart(vec2 p) {
+    p.x = abs(p.x);
+    if (p.y + p.x > 1.0) {
+        return sqrt(dot2(p - vec2(0.25, 0.75))) - sqrt(2.0) / 4.0;
+    }
+    return sqrt(min(dot2(p - vec2(0.0, 1.0)), dot2(p - 0.5 * max(p.x + p.y, 0.0)))) * sign(p.x - p.y);
+}
+float hash(float n) { return fract(sin(n) * 43758.5453); }
+
+// ---------------------------------------------------------------- 头顶
+vec4 drawHead(vec2 p, int kind, float top, float yaw) {
     vec4 acc = vec4(0.0);
     vec2 q = p - vec2(yaw * 0.12, 0.0);
     if (kind == 1) {          // 猫耳
@@ -347,13 +365,32 @@ vec4 drawHeadwear(vec2 p, int kind, float top, float eyeHalf, float yaw) {
             put(acc, vec3(1.0, 0.4, 0.55), sdCircle(e - vec2(0.0, 0.88) - vec2(cos(a), sin(a)) * 0.06, 0.06));
         }
         putO(acc, vec3(1.0, 0.95, 0.95), sdBox(e - vec2(0.0, 0.02), vec2(0.4, 0.05), 0.04), 0.025);
-    } else if (kind == 8) {   // 墨镜
-        vec2 g = p - vec2(yaw * 0.04, 0.0);
+    } else if (kind == 8) {   // 圣诞帽：红色软帽，帽尖向一侧垂下，白色帽檐和绒球
+        vec2 e = q - vec2(0.0, top - 0.12);
+        vec3 red = vec3(0.86, 0.12, 0.16);
+        // 帽身：底边宽，向右上方弯过去
+        float d = sdTri(e, vec2(-0.78, 0.05), vec2(0.78, 0.05), vec2(0.42, 0.95));
+        d = min(d, sdSeg(e, vec2(0.42, 0.9), vec2(0.82, 0.62)) - 0.09);
+        putO(acc, red, d, 0.03);
+        put(acc, vec3(0.7, 0.08, 0.12), max(d, -sdSeg(e, vec2(-0.2, 0.1), vec2(0.5, 0.85)) + 0.03) + 0.06);
+        float brim = sdBox(e - vec2(0.0, 0.04), vec2(0.86, 0.11), 0.1);
+        putO(acc, vec3(0.98), brim, 0.03);
+        putO(acc, vec3(0.98), sdCircle(e - vec2(0.86, 0.56), 0.15), 0.03);
+    }
+    return acc;
+}
+
+// ---------------------------------------------------------------- 眼部
+vec4 drawEyes(vec2 p, int kind, float eyeHalf, float eyeY, float yaw) {
+    vec4 acc = vec4(0.0);
+    vec2 g = p - vec2(yaw * 0.04, eyeY);
+    float temple = eyeHalf + 0.58;   // 镜腿伸到脸侧
+    if (kind == 1) {          // 墨镜
         float lens = min(sdBox(g - vec2(-eyeHalf, 0.0), vec2(0.27, 0.16), 0.1),
                          sdBox(g - vec2(eyeHalf, 0.0), vec2(0.27, 0.16), 0.1));
         float frame = min(sdSeg(g, vec2(-eyeHalf + 0.25, 0.06), vec2(eyeHalf - 0.25, 0.06)) - 0.025,
-                          min(sdSeg(g, vec2(-eyeHalf - 0.27, 0.05), vec2(-0.98, 0.1)) - 0.025,
-                              sdSeg(g, vec2(eyeHalf + 0.27, 0.05), vec2(0.98, 0.1)) - 0.025));
+                          min(sdSeg(g, vec2(-eyeHalf - 0.27, 0.05), vec2(-temple, 0.1)) - 0.025,
+                              sdSeg(g, vec2(eyeHalf + 0.27, 0.05), vec2(temple, 0.1)) - 0.025));
         put(acc, kInk, min(frame, lens - 0.03));
         putA(acc, vec3(0.08, 0.09, 0.12), lens, 0.95);
         // 镜片上的反光
@@ -362,9 +399,260 @@ vec4 drawHeadwear(vec2 p, int kind, float top, float eyeHalf, float yaw) {
             vec2 r = g - vec2(sx * eyeHalf, 0.0);
             putA(acc, vec3(1.0), max(sdSeg(r, vec2(-0.12, 0.02), vec2(0.0, 0.12)) - 0.025, lens), 0.6);
         }
+    } else if (kind == 2) {   // 近视眼镜：细金属圆框，镜片几乎透明
+        vec3 metal = vec3(0.55, 0.45, 0.3);
+        float lens = min(sdCircle(g - vec2(-eyeHalf, 0.0), 0.2), sdCircle(g - vec2(eyeHalf, 0.0), 0.2));
+        putA(acc, vec3(0.85, 0.92, 1.0), lens, 0.12);
+        for (int i = 0; i < 2; ++i) {
+            float sx = i == 0 ? -1.0 : 1.0;
+            vec2 r = g - vec2(sx * eyeHalf, 0.0);
+            putA(acc, vec3(1.0), max(sdSeg(r, vec2(-0.1, 0.04), vec2(-0.02, 0.13)) - 0.015, sdCircle(r, 0.2)), 0.5);
+        }
+        float frame = abs(lens) - 0.014;
+        // 鼻梁：两片镜片之间略向上拱的一小段
+        frame = min(frame, min(sdSeg(g, vec2(-eyeHalf + 0.2, 0.04), vec2(0.0, 0.07)),
+                               sdSeg(g, vec2(0.0, 0.07), vec2(eyeHalf - 0.2, 0.04))) - 0.012);
+        frame = min(frame, min(sdSeg(g, vec2(-eyeHalf - 0.2, 0.03), vec2(-temple, 0.08)),
+                               sdSeg(g, vec2(eyeHalf + 0.2, 0.03), vec2(temple, 0.08))) - 0.012);
+        put(acc, metal, frame);
+    } else if (kind == 3) {   // 黑框眼镜：粗方框
+        float lens = min(sdBox(g - vec2(-eyeHalf, 0.0), vec2(0.24, 0.17), 0.06),
+                         sdBox(g - vec2(eyeHalf, 0.0), vec2(0.24, 0.17), 0.06));
+        putA(acc, vec3(0.85, 0.92, 1.0), lens, 0.1);
+        for (int i = 0; i < 2; ++i) {
+            float sx = i == 0 ? -1.0 : 1.0;
+            vec2 r = g - vec2(sx * eyeHalf, 0.0);
+            putA(acc, vec3(1.0), max(sdSeg(r, vec2(-0.13, 0.02), vec2(-0.04, 0.12)) - 0.018, lens), 0.45);
+        }
+        float frame = abs(lens) - 0.04;
+        frame = min(frame, sdSeg(g, vec2(-eyeHalf + 0.22, 0.07), vec2(eyeHalf - 0.22, 0.07)) - 0.035);
+        frame = min(frame, min(sdSeg(g, vec2(-eyeHalf - 0.24, 0.1), vec2(-temple, 0.12)),
+                               sdSeg(g, vec2(eyeHalf + 0.24, 0.1), vec2(temple, 0.12))) - 0.03);
+        put(acc, vec3(0.08, 0.07, 0.08), frame);
+    } else if (kind == 4) {   // 心形眼镜：粉色镜片，红框
+        float lens = 1e5;
+        for (int i = 0; i < 2; ++i) {
+            float sx = i == 0 ? -1.0 : 1.0;
+            vec2 r = (g - vec2(sx * eyeHalf, -0.24)) / 0.46;
+            lens = min(lens, sdHeart(r) * 0.46);
+        }
+        float frame = min(abs(lens) - 0.03, sdSeg(g, vec2(-eyeHalf + 0.15, 0.06), vec2(eyeHalf - 0.15, 0.06)) - 0.025);
+        frame = min(frame, min(sdSeg(g, vec2(-eyeHalf - 0.24, 0.06), vec2(-temple, 0.1)),
+                               sdSeg(g, vec2(eyeHalf + 0.24, 0.06), vec2(temple, 0.1))) - 0.025);
+        putA(acc, vec3(1.0, 0.35, 0.6), lens, 0.7);
+        put(acc, vec3(0.9, 0.1, 0.3), frame);
+        for (int i = 0; i < 2; ++i) {
+            float sx = i == 0 ? -1.0 : 1.0;
+            putA(acc, vec3(1.0), max(sdCircle(g - vec2(sx * eyeHalf - 0.08, 0.06), 0.04), lens), 0.8);
+        }
+    } else if (kind == 5) {   // 海盗眼罩：盖住画面右侧的眼睛，带子斜过额头
+        vec2 c = g - vec2(eyeHalf, -0.01);
+        float patch = sdEllipse(c, vec2(0.25, 0.2));
+        // 带子从眼罩斜过额头绕到脑后，另一头从眼罩外侧绕到耳后
+        float strap = min(sdSeg(g, vec2(eyeHalf - 0.15, 0.12), vec2(-0.92, 0.62)),
+                          sdSeg(g, vec2(eyeHalf + 0.2, 0.08), vec2(temple, 0.02))) - 0.025;
+        put(acc, vec3(0.1, 0.09, 0.1), strap);
+        putO(acc, vec3(0.12, 0.11, 0.12), patch, 0.025);
+        putA(acc, vec3(1.0), max(sdSeg(c, vec2(-0.12, 0.06), vec2(-0.02, 0.12)) - 0.018, patch), 0.25);
     }
     return acc;
 }
+
+// ---------------------------------------------------------------- 耳饰
+// 一只耳朵上的耳饰，e 以耳垂为原点
+void earring(inout vec4 acc, vec2 e, int kind, float side, float sway) {
+    vec3 gold = vec3(1.0, 0.8, 0.28);
+    if (kind == 1) {          // 金耳环：大圆环
+        vec2 c = e - vec2(0.0, -0.13);
+        put(acc, vec3(0.6, 0.42, 0.1), abs(sdCircle(c, 0.12)) - 0.03);
+        put(acc, gold, abs(sdCircle(c, 0.12)) - 0.02);
+        putA(acc, vec3(1.0, 0.97, 0.8), max(abs(sdCircle(c, 0.12)) - 0.008, -(c.x * side + c.y)), 0.6);
+    } else if (kind == 2) {   // 珍珠耳钉
+        putO(acc, vec3(0.97, 0.95, 0.9), sdCircle(e, 0.055), 0.012);
+        put(acc, vec3(1.0), sdCircle(e - vec2(-0.018, 0.018), 0.018));
+    } else if (kind == 3) {   // 流苏耳坠：金扣加红色流苏，随时间轻轻摆
+        put(acc, gold, sdCircle(e, 0.035));
+        vec2 b = rot(e - vec2(0.0, -0.04), sway);
+        put(acc, gold, sdBox(b - vec2(0.0, -0.05), vec2(0.035, 0.03), 0.01));
+        float d = 1e5;
+        for (int k = -2; k <= 2; ++k) {
+            float x = float(k) * 0.014;
+            d = min(d, sdSeg(b, vec2(x * 0.5, -0.08), vec2(x * 1.6, -0.34)) - 0.008);
+        }
+        put(acc, vec3(0.86, 0.1, 0.16), d);
+    } else if (kind == 4) {   // 樱桃耳坠：两颗挂在绿梗上的樱桃
+        vec2 b = rot(e, sway);
+        float stem = min(sdSeg(b, vec2(0.0, 0.0), vec2(-0.07, -0.2)), sdSeg(b, vec2(0.0, 0.0), vec2(0.07, -0.17))) - 0.01;
+        put(acc, vec3(0.25, 0.55, 0.2), stem);
+        putO(acc, vec3(0.88, 0.08, 0.16), sdCircle(b - vec2(-0.07, -0.25), 0.065), 0.015);
+        putO(acc, vec3(0.88, 0.08, 0.16), sdCircle(b - vec2(0.07, -0.22), 0.065), 0.015);
+        put(acc, vec3(1.0, 0.7, 0.75), sdCircle(b - vec2(-0.09, -0.23), 0.017));
+        put(acc, vec3(1.0, 0.7, 0.75), sdCircle(b - vec2(0.05, -0.2), 0.017));
+        put(acc, gold, sdCircle(b, 0.025));
+    }
+}
+
+vec4 drawEars(vec2 p, int kind, float earLX, float earRX, float earY, float yaw) {
+    vec4 acc = vec4(0.0);
+    for (int i = 0; i < 2; ++i) {
+        float sx = i == 0 ? -1.0 : 1.0;
+        // 转头时朝外转的那只耳朵转到脸后面去了，渐隐
+        float hide = clamp((sx * yaw - 0.3) / 0.3, 0.0, 1.0);
+        if (hide >= 1.0) {
+            continue;
+        }
+        float x = i == 0 ? earLX : earRX;
+        vec2 e = p - vec2(x - sx * 0.02, earY);
+        float sway = sin(uTime * 2.2 + sx) * 0.12;
+        vec4 one = vec4(0.0);
+        earring(one, e, kind, sx, sway);
+        acc = one * (1.0 - hide) + acc * (1.0 - one.a * (1.0 - hide));
+    }
+    return acc;
+}
+
+// ---------------------------------------------------------------- 颈部
+vec4 drawNeck(vec2 p, int kind, float chinY, float yaw) {
+    vec4 acc = vec4(0.0);
+    // 脖子不跟着转头，抵消一点五官随转头的平移
+    vec2 q = p - vec2(-yaw * 0.05, chinY);
+    vec3 gold = vec3(1.0, 0.78, 0.25);
+    if (kind == 1) {          // 大金链子：一圈粗链节，下面挂一块大金牌
+        for (int k = 0; k < 15; ++k) {
+            float t = float(k) / 14.0;
+            float a = mix(-0.35, -2.79, t);
+            vec2 c = vec2(cos(a) * 0.72, -0.28 + sin(a) * 0.48);
+            float ang = a + 1.5708;
+            vec2 l = rot(q - c, -ang);
+            float link = abs(sdEllipse(l, k % 2 == 0 ? vec2(0.085, 0.05) : vec2(0.07, 0.03))) - 0.022;
+            put(acc, vec3(0.62, 0.42, 0.1), link - 0.012);
+            put(acc, gold, link);
+            putA(acc, vec3(1.0, 0.96, 0.75), max(link + 0.012, -l.y), 0.7);
+        }
+        vec2 m = q - vec2(0.0, -0.9);
+        putO(acc, gold, sdCircle(m, 0.17), 0.025);
+        put(acc, vec3(0.85, 0.62, 0.15), abs(sdCircle(m, 0.12)) - 0.012);
+        put(acc, vec3(0.85, 0.62, 0.15), sdSeg(m, vec2(0.0, -0.08), vec2(0.0, 0.08)) - 0.018);
+        putA(acc, vec3(1.0), sdSeg(m, vec2(-0.08, 0.02), vec2(-0.02, 0.1)) - 0.015, 0.6);
+    } else if (kind == 2) {   // 珍珠项链
+        for (int k = 0; k < 19; ++k) {
+            float t = float(k) / 18.0;
+            float a = mix(-0.3, -2.84, t);
+            vec2 c = vec2(cos(a) * 0.62, -0.28 + sin(a) * 0.4);
+            float r = 0.045 + 0.012 * (1.0 - abs(t - 0.5) * 2.0);
+            putO(acc, vec3(0.96, 0.94, 0.9), sdCircle(q - c, r), 0.008);
+            put(acc, vec3(1.0), sdCircle(q - c - vec2(-r * 0.35, r * 0.35), r * 0.3));
+        }
+    } else if (kind == 3) {   // 哈达：白色丝巾绕过脖子，两端垂在胸前，末端有流苏
+        vec3 silk = vec3(0.97, 0.97, 0.99);
+        float collar = abs(sdEllipse(q - vec2(0.0, -0.18), vec2(0.62, 0.3))) - 0.09;
+        collar = max(collar, q.y + 0.18);
+        putA(acc, silk, collar, 0.95);
+        for (int i = 0; i < 2; ++i) {
+            float sx = i == 0 ? -1.0 : 1.0;
+            vec2 b = q - vec2(sx * 0.42, -0.35);
+            float wave = sin(b.y * 7.0 + uTime * 1.5 + sx) * 0.03;
+            float x = b.x - wave + b.y * sx * 0.12;
+            float band = max(abs(x) - 0.2, max(b.y, -(b.y + 1.5)));
+            putA(acc, silk, band, 0.95);
+            // 丝巾上的暗纹和折痕
+            putA(acc, vec3(0.86, 0.88, 0.94), max(band, abs(fract(b.y * 6.0) - 0.5) - 0.06), 0.5);
+            putA(acc, vec3(0.88, 0.9, 0.95), max(band, abs(x) - 0.012), 0.7);
+            for (int k = -4; k <= 4; ++k) {
+                float fx = float(k) * 0.045;
+                put(acc, silk, sdSeg(vec2(x, b.y), vec2(fx, -1.5), vec2(fx, -1.66)) - 0.01);
+            }
+        }
+    } else if (kind == 4) {   // 领结
+        vec2 b = q - vec2(0.0, -0.42);
+        vec3 red = vec3(0.82, 0.08, 0.14);
+        float wings = min(sdTri(b, vec2(0.0, 0.0), vec2(-0.32, 0.17), vec2(-0.32, -0.17)),
+                          sdTri(b, vec2(0.0, 0.0), vec2(0.32, 0.17), vec2(0.32, -0.17))) - 0.025;
+        putO(acc, red, wings, 0.025);
+        put(acc, vec3(0.62, 0.04, 0.1), max(wings, -abs(b.y) + 0.04));
+        putO(acc, vec3(0.7, 0.05, 0.12), sdBox(b, vec2(0.065, 0.075), 0.03), 0.025);
+    }
+    return acc;
+}
+
+// ---------------------------------------------------------------- 嘴上叼的
+vec4 drawMouth(vec2 p, int kind, float mouthY, float mouthHalf, float open, float yaw) {
+    vec4 acc = vec4(0.0);
+    // 叼在画面右侧的嘴角，张嘴时跟着下唇往下掉一点
+    vec2 corner = vec2(mouthHalf * 0.7 + yaw * 0.2, mouthY - open * 0.12);
+    vec2 q = p - corner;
+    if (kind == 1 || kind == 2) {   // 雪茄 / 香烟：斜向下伸出，烟头发红，冒烟
+        bool cigar = kind == 1;
+        float len = cigar ? 0.78 : 0.62;
+        float r = cigar ? 0.065 : 0.032;
+        vec2 dir = normalize(vec2(1.0, -0.32));
+        vec2 l = vec2(dot(q, dir), dot(q, vec2(-dir.y, dir.x)));
+        float body = sdBox(l - vec2(len * 0.5, 0.0), vec2(len * 0.5, r), r * 0.6);
+        put(acc, kInk, body - 0.02);
+        if (cigar) {
+            put(acc, vec3(0.45, 0.26, 0.13), body);
+            put(acc, vec3(0.34, 0.18, 0.08), max(body, abs(fract(l.x * 9.0) - 0.5) - 0.06));
+            putO(acc, vec3(0.85, 0.15, 0.15), sdBox(l - vec2(0.2, 0.0), vec2(0.06, r + 0.008), 0.01), 0.012);
+            put(acc, vec3(1.0, 0.85, 0.3), sdBox(l - vec2(0.2, 0.0), vec2(0.02, r + 0.008), 0.005));
+        } else {
+            put(acc, vec3(0.97, 0.96, 0.94), body);
+            put(acc, vec3(0.95, 0.6, 0.28), max(body, l.x - 0.18));
+        }
+        // 烟灰和红热的烟头，亮度跟着"吸"的节奏起伏
+        float glow = 0.75 + 0.25 * sin(uTime * 2.5);
+        float tip = max(body, len - r * 0.4 - l.x);
+        put(acc, mix(vec3(0.6, 0.12, 0.05), vec3(1.0, 0.45, 0.12), glow), tip);
+        putA(acc, vec3(0.62, 0.6, 0.58), max(max(body, len - r * 1.6 - l.x), l.x - (len - r * 0.4)), 0.9);
+        // 烟雾：几团从烟头往上飘、逐渐变大变淡
+        vec2 tipPos = dir * len;
+        for (int k = 0; k < 6; ++k) {
+            float t = fract(uTime * 0.25 + float(k) / 6.0);
+            vec2 c = tipPos + vec2(sin(t * 6.0 + float(k)) * 0.08 + t * 0.15, t * 1.1 + 0.05);
+            float rad = (cigar ? 0.07 : 0.045) + t * (cigar ? 0.18 : 0.1);
+            putA(acc, vec3(0.9, 0.9, 0.92), sdCircle(q - c, rad), (1.0 - t) * (cigar ? 0.45 : 0.3));
+        }
+    } else if (kind == 3) {         // 棒棒糖：白色小棍，彩色螺旋糖
+        vec2 dir = normalize(vec2(1.0, -0.15));
+        vec2 l = vec2(dot(q, dir), dot(q, vec2(-dir.y, dir.x)));
+        float stick = sdBox(l - vec2(0.28, 0.0), vec2(0.28, 0.022), 0.02);
+        putO(acc, vec3(0.98), stick, 0.015);
+        vec2 c = q - dir * 0.66;
+        float candy = sdCircle(c, 0.24);
+        putO(acc, vec3(1.0, 0.45, 0.6), candy, 0.025);
+        float a = atan(c.y, c.x);
+        float spiral = fract((length(c) * 9.0 - a / 6.2831853) + uTime * 0.2);
+        put(acc, vec3(1.0, 0.95, 0.97), max(candy + 0.02, abs(spiral - 0.5) - 0.18));
+        putA(acc, vec3(1.0), sdCircle(c - vec2(-0.09, 0.09), 0.05), 0.7);
+    } else if (kind == 4) {         // 玫瑰：横着咬在嘴里，花朵在画面左侧
+        vec2 r = p - vec2(yaw * 0.2, mouthY - open * 0.12);
+        float stem = sdSeg(r, vec2(-0.55, 0.02), vec2(0.75, -0.05)) - 0.022;
+        putO(acc, vec3(0.2, 0.5, 0.18), stem, 0.012);
+        for (int k = 0; k < 4; ++k) {
+            float x = mix(-0.2, 0.6, float(k) / 3.0);
+            float s = k % 2 == 0 ? 1.0 : -1.0;
+            put(acc, vec3(0.18, 0.42, 0.15), sdTri(r, vec2(x - 0.03, 0.0), vec2(x + 0.03, 0.0), vec2(x + 0.04, 0.07 * s)));
+        }
+        putO(acc, vec3(0.3, 0.62, 0.25), sdEllipse(rot(r - vec2(-0.38, 0.1), 0.6), vec2(0.13, 0.06)), 0.012);
+        vec2 b = r - vec2(-0.66, 0.08);
+        putO(acc, vec3(0.78, 0.06, 0.14), sdCircle(b, 0.2), 0.02);
+        for (int k = 0; k < 3; ++k) {
+            float rad = 0.16 - float(k) * 0.05;
+            float a = float(k) * 1.3 + 0.4;
+            put(acc, vec3(0.55, 0.02, 0.08), abs(sdCircle(b - vec2(cos(a), sin(a)) * 0.02, rad)) - 0.012);
+        }
+        put(acc, vec3(0.92, 0.2, 0.3), sdCircle(b - vec2(-0.06, 0.07), 0.04));
+    }
+    return acc;
+}
+
+// 叠加一层：上层盖下层
+void over(inout vec4 acc, vec4 layer) {
+    acc = layer + acc * (1.0 - layer.a);
+}
+
+// 头像局部坐标（drawAvatar 用的）换算到脸的局部坐标
+const float kAvatarScale = 1.18;
+float avatarY(float y) { return (y + 0.3) * kAvatarScale - 0.3; }
 
 void main() {
     vec3 col = texture(uTex, vUV).rgb;
@@ -377,25 +665,38 @@ void main() {
         vec2 u = uPose[i].zw;
         float s = uPose2[i].x;
         vec2 p = vec2(dot(d, u), -(-d.x * u.y + d.y * u.x)) / s;
-        if (length(p - vec2(0.0, 0.0)) > 3.2) {
+        // 哈达垂到胸前，范围要比头部大一些
+        if (p.y < -4.0 || length(p) > 4.0) {
             continue;
         }
         AA = 1.4 / s;
         vec4 acc = vec4(0.0);
         if (uAvatar > 0) {
             // 头像整体放大一些，盖住头发和下巴
-            const float kAvatarScale = 1.18;
             vec2 pa = (p - vec2(0.0, -0.3)) / kAvatarScale + vec2(0.0, -0.3);
             AA = 1.4 / (s * kAvatarScale);
             acc = drawAvatar(pa, uAvatar, uPose2[i], uExpr[i], uExpr2[i]);
             AA = 1.4 / s;
         }
-        if (uHeadwear > 0) {
-            // 有头像时头饰戴在头像上，头顶位置取头像的
-            float top = uAvatar > 0 ? max(uPose2[i].w, 1.05) : uPose2[i].w;
-            vec4 h = drawHeadwear(p, uHeadwear, top, uAvatar > 0 ? 0.42 : uExpr2[i].w, uPose2[i].y);
-            acc = h + acc * (1.0 - h.a);
-        }
+        float yaw = uPose2[i].y;
+        float open = uExpr[i].z;
+        bool av = uAvatar > 0;
+        // 戴在头像上时，眼睛、嘴、耳朵、下巴的位置取头像的
+        float top = av ? max(uPose2[i].w, 1.05) : uPose2[i].w;
+        float eyeHalf = av ? 0.42 * kAvatarScale : uExpr2[i].w;
+        float eyeY = av ? avatarY(uAvatar == 6 ? 0.45 : 0.03) : 0.0;
+        float mouthY = av ? avatarY(uAvatar == 1 ? -0.9 : -0.68) : uFace3[i].x;
+        float mouthHalf = av ? 0.2 : uFace3[i].y;
+        float chinY = av ? avatarY(-1.42) : uFace3[i].z;
+        float earY = av ? avatarY(-0.5) : uFace3[i].w;
+        float earLX = av ? -1.22 * kAvatarScale : uFace4[i].x;
+        float earRX = av ? 1.22 * kAvatarScale : uFace4[i].y;
+        // 从后往前画：脖子、耳朵、嘴、眼睛、头顶
+        if (uAccNeck > 0) over(acc, drawNeck(p, uAccNeck, chinY, yaw));
+        if (uAccEars > 0) over(acc, drawEars(p, uAccEars, earLX, earRX, earY, yaw));
+        if (uAccMouth > 0) over(acc, drawMouth(p, uAccMouth, mouthY, mouthHalf, open, yaw));
+        if (uAccEyes > 0) over(acc, drawEyes(p, uAccEyes, eyeHalf, eyeY, yaw));
+        if (uAccHead > 0) over(acc, drawHead(p, uAccHead, top, yaw));
         col = col * (1.0 - acc.a) + acc.rgb;
     }
     oColor = vec4(col, 1.0);

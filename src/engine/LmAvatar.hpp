@@ -15,19 +15,6 @@ enum LmAvatarKind {
     LM_AVATAR_COUNT
 };
 
-/// 头饰的种类，0 为不使用。与 lumina_headwear 一致
-enum LmHeadwearKind {
-    LM_HEADWEAR_NONE = 0,
-    LM_HEADWEAR_CAT_EARS = 1,      ///< 猫耳
-    LM_HEADWEAR_BUNNY_EARS = 2,    ///< 兔耳
-    LM_HEADWEAR_CROWN = 3,         ///< 皇冠
-    LM_HEADWEAR_FLOWERS = 4,       ///< 花环
-    LM_HEADWEAR_HALO = 5,          ///< 光环
-    LM_HEADWEAR_HORNS = 6,         ///< 小恶魔角
-    LM_HEADWEAR_PARTY_HAT = 7,     ///< 派对帽
-    LM_HEADWEAR_SUNGLASSES = 8,    ///< 墨镜
-    LM_HEADWEAR_COUNT
-};
 
 /**
  * @brief 一张脸的姿态与表情，用来驱动卡通头像和头饰
@@ -52,6 +39,11 @@ struct LmAvatarFace {
     float top = 1.0f;        ///< 头顶（含头发）的 y 坐标
     float eyeHalf = 0.4f;    ///< 两眼间距的一半
     float mouthY = -0.8f;    ///< 嘴的 y 坐标
+    float mouthHalf = 0.35f; ///< 嘴宽的一半
+    float chinY = -1.45f;    ///< 下巴尖的 y 坐标
+    float earLeftX = -1.0f;  ///< 画面左侧耳朵（脸的外缘）的 x 坐标
+    float earRightX = 1.0f;
+    float earY = -0.25f;     ///< 耳垂附近的 y 坐标
 };
 
 /**

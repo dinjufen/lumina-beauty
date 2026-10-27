@@ -64,9 +64,15 @@ struct LmParams {
     /// 从素材文件加载的风格，设置后代替 styleType 指定的内置风格；强度仍由上面两个滑杆控制
     std::shared_ptr<const LmLook> look;
 
-    // 卡通头像与头饰，取 LmAvatarKind / LmHeadwearKind，0 为不使用
+    // 卡通头像（LmAvatarKind）与五个配饰槽位（序号见 lumina_acc_*），0 为不使用，各槽位可以同时使用
     int avatar = 0;
-    int headwear = 0;
+    int accHead = 0;
+    int accEyes = 0;
+    int accEars = 0;
+    int accNeck = 0;
+    int accMouth = 0;
+
+    bool HasAccessory() const { return accHead > 0 || accEyes > 0 || accEars > 0 || accNeck > 0 || accMouth > 0; }
 
     // 输入画面的色彩空间：矩阵 601 或 709，是否全范围
     int colorMatrix = 601;

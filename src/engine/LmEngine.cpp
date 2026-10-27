@@ -91,7 +91,25 @@ void Apply(LmParams& p, lumina_param param, float v) {
         case LUMINA_STYLE_MAKEUP: p.makeupMakeupIntensity = Clamp01(v); break;
         case LUMINA_BACKGROUND: p.background = ToIndex(v, 3); break;
         case LUMINA_AVATAR: p.avatar = ToIndex(v, LUMINA_AVATAR_COUNT); break;
-        case LUMINA_HEADWEAR: p.headwear = ToIndex(v, LUMINA_HEADWEAR_COUNT); break;
+        case LUMINA_HEADWEAR: {
+            // 旧的单选头饰：1 到 7 是头顶的配饰，序号与 lumina_acc_head 相同；8 是墨镜，归到眼部
+            const int k = ToIndex(v, LUMINA_HEADWEAR_COUNT);
+            if (k == LUMINA_HEADWEAR_SUNGLASSES) {
+                p.accHead = 0;
+                p.accEyes = LUMINA_ACC_EYES_SUNGLASSES;
+            } else {
+                p.accHead = k;
+                if (p.accEyes == LUMINA_ACC_EYES_SUNGLASSES) {
+                    p.accEyes = 0;
+                }
+            }
+            break;
+        }
+        case LUMINA_ACC_HEAD: p.accHead = ToIndex(v, LUMINA_ACC_HEAD_COUNT); break;
+        case LUMINA_ACC_EYES: p.accEyes = ToIndex(v, LUMINA_ACC_EYES_COUNT); break;
+        case LUMINA_ACC_EARS: p.accEars = ToIndex(v, LUMINA_ACC_EARS_COUNT); break;
+        case LUMINA_ACC_NECK: p.accNeck = ToIndex(v, LUMINA_ACC_NECK_COUNT); break;
+        case LUMINA_ACC_MOUTH: p.accMouth = ToIndex(v, LUMINA_ACC_MOUTH_COUNT); break;
         default: break;
     }
 }
@@ -101,7 +119,7 @@ bool NeedFace(const LmParams& p) {
            p.jaw > 0.001f || p.shrinkHead > 0.001f || std::fabs(p.noseWing - 0.5f) > 0.001f ||
            std::fabs(p.forehead - 0.5f) > 0.001f || p.whitenTeeth > 0.001f || p.removePouch > 0.001f ||
            p.removeSmileFolds > 0.001f || p.smooth > 0.001f || p.makeupMakeupIntensity > 0.001f || p.avatar > 0 ||
-           p.headwear > 0;
+           p.HasAccessory();
 }
 
 bool EnsureGL(lumina_engine* e) {
@@ -166,7 +184,7 @@ bool Process(lumina_engine* e, int w, int h, const uint8_t* in, uint8_t* out) {
             LmBuildWarpOps(faces[i], params, e->warpOps);
             LmBuildRegions(faces[i], params, e->regions);
             LmBuildMakeup(faces[i], params, e->makeup);
-            if (params.avatar > 0 || params.headwear > 0) {
+            if (params.avatar > 0 || params.HasAccessory()) {
                 LmAvatarFace avatar;
                 LmBuildAvatarFace(faces[i], e->avatarStates[i], avatar);
                 e->avatars.push_back(avatar);

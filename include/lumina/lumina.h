@@ -70,9 +70,18 @@ typedef enum lumina_param {
     /* background: LUMINA_BACKGROUND is a value from lumina_background */
     LUMINA_BACKGROUND,
 
-    /* fun: LUMINA_AVATAR from lumina_avatar, LUMINA_HEADWEAR from lumina_headwear */
+    /* fun: LUMINA_AVATAR from lumina_avatar.
+       LUMINA_HEADWEAR is the older single accessory list (lumina_headwear); setting it fills LUMINA_ACC_HEAD,
+       or LUMINA_ACC_EYES for the sunglasses. New code should use the LUMINA_ACC_* slots below. */
     LUMINA_AVATAR,
     LUMINA_HEADWEAR,
+
+    /* accessories, one item per slot, all slots combine freely; 0 = none */
+    LUMINA_ACC_HEAD,    /**< lumina_acc_head */
+    LUMINA_ACC_EYES,    /**< lumina_acc_eyes */
+    LUMINA_ACC_EARS,    /**< lumina_acc_ears */
+    LUMINA_ACC_NECK,    /**< lumina_acc_neck */
+    LUMINA_ACC_MOUTH,   /**< lumina_acc_mouth */
 
     LUMINA_PARAM_COUNT
 } lumina_param;
@@ -113,6 +122,38 @@ typedef enum lumina_headwear {
     LUMINA_HEADWEAR_HALO, LUMINA_HEADWEAR_HORNS, LUMINA_HEADWEAR_PARTY_HAT, LUMINA_HEADWEAR_SUNGLASSES,
     LUMINA_HEADWEAR_COUNT
 } lumina_headwear;
+
+typedef enum lumina_acc_head {
+    LUMINA_ACC_HEAD_NONE = 0,
+    LUMINA_ACC_HEAD_CAT_EARS, LUMINA_ACC_HEAD_BUNNY_EARS, LUMINA_ACC_HEAD_CROWN, LUMINA_ACC_HEAD_FLOWERS,
+    LUMINA_ACC_HEAD_HALO, LUMINA_ACC_HEAD_HORNS, LUMINA_ACC_HEAD_PARTY_HAT, LUMINA_ACC_HEAD_SANTA_HAT,
+    LUMINA_ACC_HEAD_COUNT
+} lumina_acc_head;
+
+typedef enum lumina_acc_eyes {
+    LUMINA_ACC_EYES_NONE = 0,
+    LUMINA_ACC_EYES_SUNGLASSES, LUMINA_ACC_EYES_ROUND_GLASSES, LUMINA_ACC_EYES_THICK_FRAMES,
+    LUMINA_ACC_EYES_HEART_GLASSES, LUMINA_ACC_EYES_EYE_PATCH,
+    LUMINA_ACC_EYES_COUNT
+} lumina_acc_eyes;
+
+typedef enum lumina_acc_ears {
+    LUMINA_ACC_EARS_NONE = 0,
+    LUMINA_ACC_EARS_GOLD_HOOPS, LUMINA_ACC_EARS_PEARL_STUDS, LUMINA_ACC_EARS_TASSELS, LUMINA_ACC_EARS_CHERRIES,
+    LUMINA_ACC_EARS_COUNT
+} lumina_acc_ears;
+
+typedef enum lumina_acc_neck {
+    LUMINA_ACC_NECK_NONE = 0,
+    LUMINA_ACC_NECK_GOLD_CHAIN, LUMINA_ACC_NECK_PEARLS, LUMINA_ACC_NECK_KHATA, LUMINA_ACC_NECK_BOW_TIE,
+    LUMINA_ACC_NECK_COUNT
+} lumina_acc_neck;
+
+typedef enum lumina_acc_mouth {
+    LUMINA_ACC_MOUTH_NONE = 0,
+    LUMINA_ACC_MOUTH_CIGAR, LUMINA_ACC_MOUTH_CIGARETTE, LUMINA_ACC_MOUTH_LOLLIPOP, LUMINA_ACC_MOUTH_ROSE,
+    LUMINA_ACC_MOUTH_COUNT
+} lumina_acc_mouth;
 
 typedef enum lumina_log_level { LUMINA_LOG_INFO = 0, LUMINA_LOG_WARN = 1, LUMINA_LOG_ERROR = 2 } lumina_log_level;
 

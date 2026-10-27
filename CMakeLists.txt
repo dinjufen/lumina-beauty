@@ -62,6 +62,15 @@ install(FILES ${ONNXRUNTIME_DLL} ${ONNXRUNTIME_EXTRA_LIBS} DESTINATION bin)
 install(DIRECTORY models/ DESTINATION models FILES_MATCHING PATTERN "*.onnx" PATTERN "*.txt" PATTERN "*.md")
 install(DIRECTORY looks/ DESTINATION looks)
 
+# 静态版核心：OBS 插件和需要直接用引擎内部类的工具链接它
+if(LUMINA_BUILD_TOOLS OR LUMINA_BUILD_OBS_PLUGIN)
+    add_library(lumina_static STATIC ${LUMINA_ENGINE_SOURCES} ${LUMINA_PLATFORM_SOURCES})
+    target_include_directories(lumina_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+                               PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/engine)
+    target_link_libraries(lumina_static PRIVATE onnxruntime_imported)
+    lumina_link_platform(lumina_static PUBLIC)
+endif()
+
 # ---------------------------------------------------------------- tools
 if(LUMINA_BUILD_TOOLS)
     add_executable(lumina-cli tools/lumina_cli.cpp)
@@ -73,6 +82,13 @@ if(LUMINA_BUILD_TOOLS)
     add_executable(lumina-look tools/lumina_look.cpp src/engine/LmLook.cpp src/engine/LmJson.cpp)
     target_include_directories(lumina-look PRIVATE src/engine include)
     set_target_properties(lumina-look PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+    # 配饰预览：不用摄像头，把头像和配饰画在一张示意脸上出图
+    add_executable(lumina-preview tools/lumina_preview.cpp)
+    target_include_directories(lumina-preview PRIVATE src/engine)
+    target_link_libraries(lumina-preview PRIVATE lumina_static onnxruntime_imported)
+    set_target_properties(lumina-preview PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        BUILD_RPATH "@loader_path" INSTALL_RPATH "@loader_path")
 endif()
 
 # ---------------------------------------------------------------- OBS plugin
